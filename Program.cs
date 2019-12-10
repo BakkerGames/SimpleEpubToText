@@ -41,10 +41,20 @@ namespace SimpleEpubToText
             {
                 Directory.CreateDirectory(toFolder);
             }
-            foreach (string s in Directory.EnumerateFiles (fromFolder, "*.epub", SearchOption.TopDirectoryOnly))
+            foreach (string filepath in Directory.EnumerateFiles(fromFolder, "*.epub", SearchOption.TopDirectoryOnly))
             {
-                Console.WriteLine(s);
+                DoConversion(fromFolder, toFolder, Path.GetFileName(filepath));
             }
+            foreach (string ds in Directory.EnumerateDirectories(fromFolder))
+            {
+                string subdir = Path.GetFileName(ds);
+                ConvertAllEpub(Path.Combine(fromFolder, subdir), Path.Combine(toFolder, subdir));
+            }
+        }
+
+        private static void DoConversion(string fromFolder, string toFolder, string filename)
+        {
+            Console.WriteLine(filename);
         }
     }
 }
