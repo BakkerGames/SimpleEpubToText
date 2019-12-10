@@ -1,0 +1,12 @@
+bin/
+obj/
+packages/
+Debug/
+Release/
+win10-x64/
+win10-x86/
+.vs/
+!*.user
+*.bak
+*.log
+*.orig
