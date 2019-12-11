@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace SimpleEpubToText
 {
@@ -48,6 +46,10 @@ namespace SimpleEpubToText
             foreach (string ds in Directory.EnumerateDirectories(fromFolder))
             {
                 string subdir = Path.GetFileName(ds);
+                if (subdir.StartsWith("."))
+                {
+                    continue;
+                }
                 ConvertAllEpub(Path.Combine(fromFolder, subdir), Path.Combine(toFolder, subdir));
             }
         }
@@ -55,6 +57,25 @@ namespace SimpleEpubToText
         private static void DoConversion(string fromFolder, string toFolder, string filename)
         {
             Console.WriteLine(filename);
+            EbookLoader ebook = new EbookLoader(Path.Combine(fromFolder, filename));
+            string outFilename = filename.Replace(".epub", ".txt");
+            StringBuilder s = new StringBuilder();
+            bool firstChapter = true;
+            foreach (Chapter c in ebook.Chapters)
+            {
+                if (!firstChapter)
+                {
+                    s.AppendLine();
+                    s.AppendLine();
+                }
+                firstChapter = false;
+                foreach (string p in c.Paragraphs)
+                {
+                    s.AppendLine(p);
+                }
+            }
+            File.WriteAllText(Path.Combine(toFolder, outFilename), s.ToString());
+            throw new SystemException(); //todo
         }
     }
 }
