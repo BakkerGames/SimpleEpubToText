@@ -40,10 +40,9 @@ namespace SimpleEpubToText
                 bool secondLine = false;
                 bool joinLines = false;
                 string[] contentText = contentFiles[i].Content
-                                                      .Replace("\r\n", "\n")
-                                                      .Replace("</p>", "\n")
-                                                      .Replace("<p>\n", "<p>")
-                                                      .Replace("\n<a ", "<a ")
+                                                      .Replace("\r", "")
+                                                      .Replace("\n", "")
+                                                      .Replace("</p>", "</p>\n")
                                                       .Split('\n');
                 foreach (string s in contentText)
                 {
@@ -63,7 +62,7 @@ namespace SimpleEpubToText
                     }
                     if (foundBody)
                     {
-                        //if (s1.Contains("<img") || s1.Contains("<image"))
+                        //if (s1.Contains("<span class=\"italic\">"))
                         //{
                         //    Console.WriteLine(s1);
                         //}
@@ -89,6 +88,13 @@ namespace SimpleEpubToText
                         s1 = s1.Replace("<em>", "_i1_");
                         s1 = Regex.Replace(s1, "<em [^>]*>", "_i1_");
                         s1 = s1.Replace("</em>", "_i0_");
+                        while (s1.Contains("<span class=\"italic\">"))
+                        {
+                            int pos = s1.IndexOf("<span class=\"italic\">");
+                            s1 = s1.Substring(0, pos) + "_i1_" + s1.Substring(pos + 21);
+                            pos = s1.IndexOf("</span>", pos);
+                            s1 = s1.Substring(0, pos) + "_i0_" + s1.Substring(pos + 7);
+                        }
                         // clean up
                         s1 = Regex.Replace(s1, "<[^>]*>", "").Trim();
                         s1 = Regex.Replace(s1, "   *", " ");
