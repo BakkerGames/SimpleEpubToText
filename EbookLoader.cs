@@ -153,6 +153,11 @@ namespace SimpleEpubToText
                         //}
                     }
                 }
+                while (chapter.Paragraphs[chapter.Paragraphs.Count - 1].Length == 0 ||
+                    chapter.Paragraphs[chapter.Paragraphs.Count - 1] == "_p_")
+                {
+                    chapter.Paragraphs.RemoveAt(chapter.Paragraphs.Count - 1);
+                }
                 if (chapter.Paragraphs.Count > 0)
                 {
                     Chapters.Add(chapter);
