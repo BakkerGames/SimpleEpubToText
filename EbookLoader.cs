@@ -68,6 +68,7 @@ namespace SimpleEpubToText
                         s1 = s1.Replace("<li>", "_br_ * ");
                         s1 = Regex.Replace(s1, "<li [^>]*>", "_br_ * ");
                         s1 = Regex.Replace(s1, "<i [^>]*>", "_i1_");
+                        s1 = s1.Replace("</ul>", "\n_p_");
                         s1 = s1.Replace("<i>", "_i1_");
                         s1 = Regex.Replace(s1, "<i [^>]*>", "_i1_");
                         s1 = s1.Replace("</i>", "_i0_");
@@ -99,6 +100,10 @@ namespace SimpleEpubToText
                         foreach (string currLine in split1)
                         {
                             string s2 = currLine.Trim();
+                            if (s2.Length == 0)
+                            {
+                                continue;
+                            }
                             if (firstLine && s2.StartsWith("_p_"))
                             {
                                 s2 = s2.Substring(3).TrimStart();
