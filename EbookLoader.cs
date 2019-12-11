@@ -65,8 +65,10 @@ namespace SimpleEpubToText
                         s1 = Regex.Replace(s1, "<p [^>]*>", "\n_p_");
                         s1 = Regex.Replace(s1, "<br[^>]*>", "_br_");
                         s1 = Regex.Replace(s1, "<image[^>]*href *= *\"([a-z.]*)\" */>", "_image:$1_");
-                        s1 = s1.Replace("<li>", "_br_ * ");
-                        s1 = Regex.Replace(s1, "<li [^>]*>", "_br_ * ");
+                        s1 = s1.Replace("<li>", "_br__t_* ");
+                        s1 = Regex.Replace(s1, "<li [^>]*>", "_br__t_* ");
+                        s1 = s1.Replace("<hr>", "_br__hr_");
+                        s1 = Regex.Replace(s1, "<hr [^>]*>", "_br__hr_");
                         s1 = Regex.Replace(s1, "<i [^>]*>", "_i1_");
                         s1 = s1.Replace("</ul>", "\n_p_");
                         s1 = s1.Replace("<i>", "_i1_");
@@ -124,38 +126,6 @@ namespace SimpleEpubToText
                                 secondLine = true;
                             }
                         }
-                        //if (s1.Length > 0)
-                        //{
-                        //    if (s1.StartsWith("_p_"))
-                        //    {
-                        //        s1 = s1.Substring(3);
-                        //    }
-                        //    else if (!firstLine || s1.Length > 0)
-                        //    {
-                        //        s1 = "\t" + s1;
-                        //    }
-                        //    while (s1.Contains("\n"))
-                        //    {
-                        //        string s2 = s1.Substring(0, s1.IndexOf("\n")).TrimEnd();
-                        //        chapter.Paragraphs.Add(s2);
-                        //        if (firstLine)
-                        //        {
-                        //            chapter.Paragraphs.Add("");
-                        //        }
-                        //        firstLine = false;
-                        //        s1 = s1.Substring(s1.IndexOf("\n") + 1).Trim();
-                        //        if (s1.Length > 0)
-                        //        {
-                        //            s1 = "\t" + s1;
-                        //        }
-                        //    }
-                        //    chapter.Paragraphs.Add(s1);
-                        //    if (firstLine)
-                        //    {
-                        //        chapter.Paragraphs.Add("");
-                        //    }
-                        //    firstLine = false;
-                        //}
                     }
                 }
                 while (chapter.Paragraphs[chapter.Paragraphs.Count - 1].Length == 0 ||
