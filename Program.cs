@@ -28,6 +28,7 @@ namespace SimpleEpubToText
             finally
             {
 #if DEBUG
+                Console.Write("Press enter to continue...");
                 Console.ReadLine();
 #endif
             }
@@ -75,7 +76,6 @@ namespace SimpleEpubToText
                 }
             }
             File.WriteAllText(Path.Combine(toFolder, outFilename), s.ToString());
-            throw new SystemException(); //todo
         }
     }
 }

@@ -61,28 +61,41 @@ namespace SimpleEpubToText
                     }
                     if (foundBody)
                     {
+                        //if (s1.Contains("<img") || s1.Contains("<image"))
+                        //{
+                        //    Console.WriteLine(s1);
+                        //}
                         s1 = s1.Replace("<p>", "\n_p_");
                         s1 = Regex.Replace(s1, "<p [^>]*>", "\n_p_");
                         s1 = Regex.Replace(s1, "<br[^>]*>", "_br_");
-                        s1 = Regex.Replace(s1, "<image[^>]*href *= *\"([a-z.]*)\" */>", "_image:$1_");
+                        // images
+                        s1 = Regex.Replace(s1, "<img [^>]*src *= *\"([^\"]*)\"[^>]*/>", "_image:$1_");
+                        s1 = Regex.Replace(s1, "<image[^>]*href *= *\"([^\"]*)\"[^>]*/>", "_image:$1_");
+                        // misc types
                         s1 = s1.Replace("<li>", "_br__t_* ");
                         s1 = Regex.Replace(s1, "<li [^>]*>", "_br__t_* ");
                         s1 = s1.Replace("<hr>", "_br__hr_");
                         s1 = Regex.Replace(s1, "<hr [^>]*>", "_br__hr_");
+                        s1 = s1.Replace("<blockquote>", "_br__t_");
+                        s1 = Regex.Replace(s1, "<blockquote [^>]*>", "_br__t_");
+                        // italics
                         s1 = Regex.Replace(s1, "<i [^>]*>", "_i1_");
                         s1 = s1.Replace("</ul>", "\n_p_");
                         s1 = s1.Replace("<i>", "_i1_");
                         s1 = Regex.Replace(s1, "<i [^>]*>", "_i1_");
                         s1 = s1.Replace("</i>", "_i0_");
+                        // bold
                         s1 = s1.Replace("<em>", "_i1_");
                         s1 = Regex.Replace(s1, "<em [^>]*>", "_i1_");
                         s1 = s1.Replace("</em>", "_i0_");
+                        // clean up
                         s1 = Regex.Replace(s1, "<[^>]*>", "").Trim();
                         s1 = Regex.Replace(s1, "   *", " ");
                         s1 = s1.Replace("_p_ ", "_p_");
                         s1 = s1.Replace("_br_ ", "_br_");
                         s1 = s1.Replace(" _br_", "_br_");
                         s1 = s1.Trim();
+                        // ignore blank first lines
                         if (firstLine && s1.Length == 0)
                         {
                             continue;
@@ -128,11 +141,24 @@ namespace SimpleEpubToText
                         }
                     }
                 }
-                while (chapter.Paragraphs[chapter.Paragraphs.Count - 1].Length == 0 ||
-                    chapter.Paragraphs[chapter.Paragraphs.Count - 1] == "_p_")
+                // remove trailing blank and _p_ lines
+                while (chapter.Paragraphs.Count > 0 && 
+                        (chapter.Paragraphs[chapter.Paragraphs.Count - 1].Length == 0 ||
+                        chapter.Paragraphs[chapter.Paragraphs.Count - 1] == "_p_")
+                      )
                 {
                     chapter.Paragraphs.RemoveAt(chapter.Paragraphs.Count - 1);
                 }
+                // merge any lines which were split in source
+                for (int i2 = chapter.Paragraphs.Count - 1; i2 > 2; i2--)
+                {
+                    if (!chapter.Paragraphs[i2].StartsWith("_p_"))
+                    {
+                        chapter.Paragraphs[i2 - 1] += " " + chapter.Paragraphs[i2];
+                        chapter.Paragraphs[i2] = "";
+                    }
+                }
+                // add to chapter list
                 if (chapter.Paragraphs.Count > 0)
                 {
                     Chapters.Add(chapter);
