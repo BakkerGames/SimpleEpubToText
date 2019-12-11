@@ -42,10 +42,12 @@ namespace SimpleEpubToText
                 string[] contentText = contentFiles[i].Content
                                                       .Replace("\r\n", "\n")
                                                       .Replace("</p>", "\n")
+                                                      .Replace("<p>\n", "<p>")
+                                                      .Replace("\n<a ", "<a ")
                                                       .Split('\n');
                 foreach (string s in contentText)
                 {
-                    string s1 = s;
+                    string s1 = s.Trim();
                     if (!foundBody)
                     {
                         int pos = s1.IndexOf("<body>");
@@ -84,7 +86,6 @@ namespace SimpleEpubToText
                         s1 = s1.Replace("<i>", "_i1_");
                         s1 = Regex.Replace(s1, "<i [^>]*>", "_i1_");
                         s1 = s1.Replace("</i>", "_i0_");
-                        // bold
                         s1 = s1.Replace("<em>", "_i1_");
                         s1 = Regex.Replace(s1, "<em [^>]*>", "_i1_");
                         s1 = s1.Replace("</em>", "_i0_");
@@ -142,7 +143,7 @@ namespace SimpleEpubToText
                     }
                 }
                 // remove trailing blank and _p_ lines
-                while (chapter.Paragraphs.Count > 0 && 
+                while (chapter.Paragraphs.Count > 0 &&
                         (chapter.Paragraphs[chapter.Paragraphs.Count - 1].Length == 0 ||
                         chapter.Paragraphs[chapter.Paragraphs.Count - 1] == "_p_")
                       )
