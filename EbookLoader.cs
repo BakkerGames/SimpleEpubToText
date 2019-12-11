@@ -37,6 +37,8 @@ namespace SimpleEpubToText
                 Chapter chapter = new Chapter();
                 bool foundBody = false;
                 bool firstLine = true;
+                bool secondLine = false;
+                bool joinLines = false;
                 string[] contentText = contentFiles[i].Content
                                                       .Replace("\r\n", "\n")
                                                       .Replace("</p>", "\n")
@@ -63,6 +65,9 @@ namespace SimpleEpubToText
                         s1 = Regex.Replace(s1, "<p [^>]*>", "\n_p_");
                         s1 = Regex.Replace(s1, "<br[^>]*>", "_br_");
                         s1 = Regex.Replace(s1, "<image[^>]*href *= *\"([a-z.]*)\" */>", "_image:$1_");
+                        s1 = s1.Replace("<li>", "_br_ * ");
+                        s1 = Regex.Replace(s1, "<li [^>]*>", "_br_ * ");
+                        s1 = Regex.Replace(s1, "<i [^>]*>", "_i1_");
                         s1 = s1.Replace("<i>", "_i1_");
                         s1 = Regex.Replace(s1, "<i [^>]*>", "_i1_");
                         s1 = s1.Replace("</i>", "_i0_");
@@ -75,11 +80,44 @@ namespace SimpleEpubToText
                         s1 = s1.Replace("_br_ ", "_br_");
                         s1 = s1.Replace(" _br_", "_br_");
                         s1 = s1.Trim();
+                        if (firstLine && s1.Length == 0)
+                        {
+                            continue;
+                        }
+                        if (joinLines)
+                        {
+                            s1 = "_p_" + s1;
+                            joinLines = false;
+                        }
+                        if (s1.EndsWith("_br_"))
+                        {
+                            joinLines = true;
+                            s1 = s1.Substring(0, s1.Length - 4);
+                        }
+                        s1 = s1.Replace("_br_", "\n_p_");
                         string[] split1 = s1.Split('\n');
                         foreach (string currLine in split1)
                         {
                             string s2 = currLine.Trim();
+                            if (firstLine && s2.StartsWith("_p_"))
+                            {
+                                s2 = s2.Substring(3).TrimStart();
+                            }
+                            if (secondLine)
+                            {
+                                if (s2 == "_p_")
+                                {
+                                    continue;
+                                }
+                                secondLine = false;
+                            }
                             chapter.Paragraphs.Add(s2);
+                            if (firstLine)
+                            {
+                                chapter.Paragraphs.Add("");
+                                firstLine = false;
+                                secondLine = true;
+                            }
                         }
                         //if (s1.Length > 0)
                         //{
