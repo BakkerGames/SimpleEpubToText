@@ -75,7 +75,20 @@ namespace SimpleEpubToText
                     s.AppendLine(p);
                 }
             }
-            File.WriteAllText(Path.Combine(toFolder, outFilename), s.ToString());
+            bool writeFile = true;
+            string outFileFullPath = Path.Combine(toFolder, outFilename);
+            if (File.Exists(outFileFullPath))
+            {
+                string oldFile = File.ReadAllText(outFileFullPath);
+                if (oldFile == s.ToString())
+                {
+                    writeFile = false;
+                }
+            }
+            if (writeFile)
+            {
+                File.WriteAllText(outFileFullPath, s.ToString());
+            }
         }
     }
 }
