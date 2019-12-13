@@ -7,6 +7,9 @@ namespace SimpleEpubToText
 {
     class Program
     {
+        private static int foundCount = 0;
+        private static int changedCount = 0;
+
         static int Main(string[] args)
         {
             try
@@ -18,6 +21,8 @@ namespace SimpleEpubToText
                 }
                 Console.WriteLine("SimpleEpubToText: {0} {1}", args[0], args[1]);
                 ConvertAllEpub(args[0], args[1]);
+                Console.WriteLine();
+                Console.WriteLine($"Files changed: {changedCount}");
                 return 0;
             }
             catch (Exception e)
@@ -42,7 +47,17 @@ namespace SimpleEpubToText
             }
             foreach (string filepath in Directory.EnumerateFiles(fromFolder, "*.epub", SearchOption.TopDirectoryOnly))
             {
-                DoConversion(fromFolder, toFolder, Path.GetFileName(filepath));
+                foundCount++;
+                if (DoConversion(fromFolder, toFolder, Path.GetFileName(filepath)))
+                {
+                    changedCount++;
+                    Console.Write("\r");
+                    Console.WriteLine(Path.GetFileName(filepath));
+                }
+                else
+                {
+                    Console.Write($"\r{foundCount}");
+                }
             }
             foreach (string ds in Directory.EnumerateDirectories(fromFolder))
             {
@@ -55,9 +70,8 @@ namespace SimpleEpubToText
             }
         }
 
-        private static void DoConversion(string fromFolder, string toFolder, string filename)
+        private static bool DoConversion(string fromFolder, string toFolder, string filename)
         {
-            Console.WriteLine(filename);
             EbookLoader ebook = new EbookLoader(Path.Combine(fromFolder, filename));
             string outFilename = filename.Replace(".epub", ".txt");
             StringBuilder s = new StringBuilder();
@@ -75,20 +89,17 @@ namespace SimpleEpubToText
                     s.AppendLine(p);
                 }
             }
-            bool writeFile = true;
             string outFileFullPath = Path.Combine(toFolder, outFilename);
             if (File.Exists(outFileFullPath))
             {
                 string oldFile = File.ReadAllText(outFileFullPath);
                 if (oldFile == s.ToString())
                 {
-                    writeFile = false;
+                    return false;
                 }
             }
-            if (writeFile)
-            {
-                File.WriteAllText(outFileFullPath, s.ToString());
-            }
+            File.WriteAllText(outFileFullPath, s.ToString());
+            return true;
         }
     }
 }
