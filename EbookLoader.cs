@@ -67,8 +67,11 @@ namespace SimpleEpubToText
                         s1 = Regex.Replace(s1, "<br[^>]*>", "_br_");
                         s1 = s1.Replace("</ul>", "\n_p_");
                         // images
-                        s1 = Regex.Replace(s1, "<img [^>]*src *= *\"([^\"]*)\"[^>]*/>", "_image:$1_");
-                        s1 = Regex.Replace(s1, "<image[^>]*href *= *\"([^\"]*)\"[^>]*/>", "_image:$1_");
+                        if (s1.Contains("<img"))
+                        {
+                            s1 = Regex.Replace(s1, "<img [^>]*src *= *\"([^\"]*)\"[^>]*/>", "_image:$1_");
+                            s1 = Regex.Replace(s1, "<image[^>]*href *= *\"([^\"]*)\"[^>]*/>", "_image:$1_");
+                        }
                         // misc types
                         s1 = s1.Replace("<li>", "_br__t_* ");
                         s1 = Regex.Replace(s1, "<li [^>]*>", "_br__t_* ");
@@ -87,8 +90,14 @@ namespace SimpleEpubToText
                         {
                             int pos = s1.IndexOf("<span class=\"italic\">");
                             s1 = s1.Substring(0, pos) + "_i1_" + s1.Substring(pos + 21);
-                            pos = s1.IndexOf("</span>", pos);
-                            s1 = s1.Substring(0, pos) + "_i0_" + s1.Substring(pos + 7);
+                            int pos2 = s1.IndexOf("</span>", pos);
+                            int pos3 = s1.IndexOf("<span ", pos);
+                            while (pos3 >= 0 && pos3 < pos2)
+                            {
+                                pos2 = s1.IndexOf("</span>", pos2 + 1);
+                                pos3 = s1.IndexOf("<span ", pos3 + 1);
+                            }
+                            s1 = s1.Substring(0, pos2) + "_i0_" + s1.Substring(pos2 + 7);
                         }
                         // bold
                         s1 = s1.Replace("<b>", "_b1_");
@@ -98,8 +107,31 @@ namespace SimpleEpubToText
                         {
                             int pos = s1.IndexOf("<span class=\"bold\">");
                             s1 = s1.Substring(0, pos) + "_b1_" + s1.Substring(pos + 19);
-                            pos = s1.IndexOf("</span>", pos);
-                            s1 = s1.Substring(0, pos) + "_b0_" + s1.Substring(pos + 7);
+                            int pos2 = s1.IndexOf("</span>", pos);
+                            int pos3 = s1.IndexOf("<span ", pos);
+                            while (pos3 >= 0 && pos3 < pos2)
+                            {
+                                pos2 = s1.IndexOf("</span>", pos2 + 1);
+                                pos3 = s1.IndexOf("<span ", pos3 + 1);
+                            }
+                            s1 = s1.Substring(0, pos2) + "_b0_" + s1.Substring(pos2 + 7);
+                        }
+                        // underline
+                        s1 = s1.Replace("<u>", "_u1_");
+                        s1 = Regex.Replace(s1, "<u [^>]*>", "_u1_");
+                        s1 = s1.Replace("</u>", "_u0_");
+                        while (s1.Contains("<span class=\"underline\">"))
+                        {
+                            int pos = s1.IndexOf("<span class=\"underline\">");
+                            s1 = s1.Substring(0, pos) + "_u1_" + s1.Substring(pos + 24);
+                            int pos2 = s1.IndexOf("</span>", pos);
+                            int pos3 = s1.IndexOf("<span ", pos);
+                            while (pos3 >= 0 && pos3 < pos2)
+                            {
+                                pos2 = s1.IndexOf("</span>", pos2 + 1);
+                                pos3 = s1.IndexOf("<span ", pos3 + 1);
+                            }
+                            s1 = s1.Substring(0, pos2) + "_u0_" + s1.Substring(pos2 + 7);
                         }
                         // quotes
                         s1 = s1.Replace("“", "\"");
@@ -109,8 +141,10 @@ namespace SimpleEpubToText
                         s1 = s1.Replace("`", "'");
                         // sup and sub
                         s1 = s1.Replace("<sup>", "_sup1_");
+                        s1 = Regex.Replace(s1, "<sup [^>]*>", "_sup1_");
                         s1 = s1.Replace("</sup>", "_sup0_");
                         s1 = s1.Replace("<sub>", "_sub1_");
+                        s1 = Regex.Replace(s1, "<sub [^>]*>", "_sub1_");
                         s1 = s1.Replace("</sub>", "_sub0_");
                         // clean up
                         s1 = Regex.Replace(s1, "<[^>]*>", "").Trim();
@@ -126,7 +160,10 @@ namespace SimpleEpubToText
                         }
                         if (joinLines)
                         {
-                            s1 = "_p_" + s1;
+                            if (!s1.StartsWith("_p_") && !s1.StartsWith("_image:"))
+                            {
+                                s1 = "_p_" + s1;
+                            }
                             joinLines = false;
                         }
                         if (s1.EndsWith("_br_"))
@@ -134,6 +171,8 @@ namespace SimpleEpubToText
                             joinLines = true;
                             s1 = s1.Substring(0, s1.Length - 4);
                         }
+                        s1 = s1.Replace("_i0__i1_", "");
+                        s1 = s1.Replace("_b0__b1_", "");
                         s1 = s1.Replace("_br_", "\n_p_");
                         string[] split1 = s1.Split('\n');
                         foreach (string currLine in split1)
@@ -158,6 +197,22 @@ namespace SimpleEpubToText
                             if (s2.StartsWith("_b1_") && s2.EndsWith("_b0_"))
                             {
                                 s2 = s2.Substring(4, s2.Length - 8);
+                            }
+                            if (s2.EndsWith("_t_"))
+                            {
+                                s2 = s2.Substring(0, s2.Length - 3);
+                            }
+                            if (firstLine && s2.StartsWith("_image"))
+                            {
+                                chapter.Paragraphs.Add(":Image");
+                                chapter.Paragraphs.Add("");
+                                firstLine = false;
+                                secondLine = false;
+                                s2 = "_p_" + s2;
+                            }
+                            if (firstLine && s2.Trim() == "")
+                            {
+                                s2 = ":Chapter";
                             }
                             chapter.Paragraphs.Add(s2);
                             if (firstLine)
