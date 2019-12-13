@@ -95,6 +95,12 @@ namespace SimpleEpubToText
                             pos = s1.IndexOf("</span>", pos);
                             s1 = s1.Substring(0, pos) + "_i0_" + s1.Substring(pos + 7);
                         }
+                        // quotes
+                        s1 = s1.Replace("“", "\"");
+                        s1 = s1.Replace("”", "\"");
+                        s1 = s1.Replace("‘", "'");
+                        s1 = s1.Replace("’", "'");
+                        s1 = s1.Replace("`", "'");
                         // clean up
                         s1 = Regex.Replace(s1, "<[^>]*>", "").Trim();
                         s1 = Regex.Replace(s1, "   *", " ");
