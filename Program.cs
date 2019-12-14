@@ -9,6 +9,7 @@ namespace SimpleEpubToText
     {
         private static int foundCount = 0;
         private static int changedCount = 0;
+        private static int maxFiles = -1; // all
 
         static int Main(string[] args)
         {
@@ -20,6 +21,13 @@ namespace SimpleEpubToText
                     return 1;
                 }
                 Console.WriteLine("SimpleEpubToText: {0} {1}", args[0], args[1]);
+                if (args.Count() >= 3)
+                {
+                    if (args[2].StartsWith("/count:"))
+                    {
+                        maxFiles = int.Parse(args[2].Substring(7));
+                    }
+                }
                 ConvertAllEpub(args[0], args[1]);
                 Console.WriteLine();
                 Console.WriteLine($"Files changed: {changedCount}");
@@ -41,12 +49,20 @@ namespace SimpleEpubToText
 
         private static void ConvertAllEpub(string fromFolder, string toFolder)
         {
+            if (maxFiles == 0)
+            {
+                return;
+            }
             if (!Directory.Exists(toFolder))
             {
                 Directory.CreateDirectory(toFolder);
             }
             foreach (string filepath in Directory.EnumerateFiles(fromFolder, "*.epub", SearchOption.TopDirectoryOnly))
             {
+                if (maxFiles == 0)
+                {
+                    break;
+                }
                 foundCount++;
                 if (DoConversion(fromFolder, toFolder, Path.GetFileName(filepath)))
                 {
@@ -59,9 +75,17 @@ namespace SimpleEpubToText
                 {
                     Console.Write($"\r{foundCount}");
                 }
+                if (maxFiles > 0)
+                {
+                    maxFiles--;
+                }
             }
             foreach (string ds in Directory.EnumerateDirectories(fromFolder))
             {
+                if (maxFiles == 0)
+                {
+                    break;
+                }
                 string subdir = Path.GetFileName(ds);
                 if (subdir.StartsWith("."))
                 {

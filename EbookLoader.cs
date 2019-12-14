@@ -51,17 +51,25 @@ namespace SimpleEpubToText
                                                       .Split('\n');
                 foreach (string s in contentText)
                 {
-                    string s2 = s.Trim();
+                    string s2;
+                    if (s.Trim().StartsWith("<"))
+                    {
+                        s2 = s.Trim();
+                    }
+                    else
+                    {
+                        s2 = s;
+                    }
                     if (s2.Length == 0) continue;
                     if (!s2.StartsWith("<"))
                     {
                         if (foundBody)
                         {
-                            if (currline.Length > 0 && currline.ToString() != "_t_")
-                            {
-                                currline.Append(" ");
-                            }
-                            currline.Append(s2);
+                            //if (currline.Length > 0 && !currline.ToString().EndsWith("_"))
+                            //{
+                            //    currline.Append(" ");
+                            //}
+                            currline.Append(FixText(s2));
                         }
                         continue;
                     }
@@ -129,7 +137,36 @@ namespace SimpleEpubToText
                             }
                             break;
                         case "blockquote":
-                            currline.Append("_t_");
+                            if (!currline.ToString().EndsWith("_t_"))
+                            {
+                                currline.Append("_t_");
+                            }
+                            break;
+                        case "i":
+                        case "/i":
+                        case "b":
+                        case "/b":
+                        case "u":
+                        case "/u":
+                        case "sup":
+                        case "/sup":
+                        case "sub":
+                        case "/sub":
+                        case "small":
+                        case "/small":
+                            // on-off tag pairs
+                            currline.Append("_");
+                            if (tag.StartsWith("/"))
+                            {
+                                currline.Append(tag.Substring(1));
+                                currline.Append("0"); // off
+                            }
+                            else
+                            {
+                                currline.Append(tag);
+                                currline.Append("1"); // on
+                            }
+                            currline.Append("_");
                             break;
                         case "p":
                         case "span":
@@ -142,6 +179,7 @@ namespace SimpleEpubToText
                         case "li":
                         case "svg":
                         case "/svg":
+                            // ignore all these
                             break;
                         default:
                             if (foundBody)
@@ -161,13 +199,31 @@ namespace SimpleEpubToText
                     chapter.Paragraphs[0].ToLower() != "###table of contents" &&
                     chapter.Paragraphs[0].ToLower() != "###contents")
                 {
-                    while (chapter.Paragraphs[chapter.Paragraphs.Count - 1] == "_p_")
+                    while (chapter.Paragraphs[chapter.Paragraphs.Count - 1].Length == 0 ||
+                           chapter.Paragraphs[chapter.Paragraphs.Count - 1] == "_p_")
                     {
                         chapter.Paragraphs.RemoveAt(chapter.Paragraphs.Count - 1);
                     }
                     Chapters.Add(chapter);
                 }
             }
+        }
+
+        private string FixText(string value)
+        {
+            if (value.Contains("_"))
+                value = value.Replace("_", "__");
+            if (value.Contains("“"))
+                value = value.Replace("“", "\"");
+            if (value.Contains("”"))
+                value = value.Replace("”", "\"");
+            if (value.Contains("‘"))
+                value = value.Replace("‘", "'");
+            if (value.Contains("’"))
+                value = value.Replace("’", "'");
+            if (value.Contains("`"))
+                value = value.Replace("`", "'");
+            return value;
         }
 
         private string GetTag(string s2)
