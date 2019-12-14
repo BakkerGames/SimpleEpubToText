@@ -85,7 +85,6 @@ namespace SimpleEpubToText
                     s.AppendLine();
                 }
                 firstChapter = false;
-                s.Append("###");
                 foreach (string p in c.Paragraphs)
                 {
                     s.AppendLine(p);
