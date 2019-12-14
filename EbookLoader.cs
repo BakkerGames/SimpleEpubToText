@@ -38,6 +38,7 @@ namespace SimpleEpubToText
                 bool foundBody = false;
                 bool firstLine = true;
                 bool secondLine = false;
+                bool inTable = false;
                 string imageFile;
                 StringBuilder currline = new StringBuilder();
                 Stack<string> spanStack = new Stack<string>();
@@ -95,6 +96,10 @@ namespace SimpleEpubToText
                         case "/ul":
                         case "/ol":
                         case "/blockquote":
+                            if (inTable)
+                            {
+                                continue;
+                            }
                             if (firstLine)
                             {
                                 string s4 = currline.ToString();
@@ -164,6 +169,10 @@ namespace SimpleEpubToText
                             }
                             break;
                         case "blockquote":
+                            if (inTable)
+                            {
+                                continue;
+                            }
                             if (!currline.ToString().EndsWith("_t_"))
                             {
                                 currline.Append("_t_");
@@ -219,6 +228,32 @@ namespace SimpleEpubToText
                                 currline.Append("* "); // no list value found
                             }
                             break;
+                        case "table":
+                            inTable = true;
+                            if (currline.Length > 0)
+                            {
+                                chapter.Paragraphs.Add(currline.ToString());
+                                currline.Clear();
+                            }
+                            chapter.Paragraphs.Add("_p__table1_");
+                            break;
+                        case "/table":
+                            inTable = false;
+                            if (currline.Length > 0)
+                            {
+                                chapter.Paragraphs.Add(currline.ToString());
+                                currline.Clear();
+                            }
+                            chapter.Paragraphs.Add("_p__table0_");
+                            break;
+                        case "tr":
+                            currline.Append("_p__tr1_");
+                            break;
+                        case "/tr":
+                            currline.Append("_tr0_");
+                            chapter.Paragraphs.Add(currline.ToString());
+                            currline.Clear();
+                            break;
                         case "i":
                         case "/i":
                         case "b":
@@ -231,6 +266,8 @@ namespace SimpleEpubToText
                         case "/sub":
                         case "small":
                         case "/small":
+                        case "td":
+                        case "/td":
                             // on-off tag pairs
                             currline.Append("_");
                             if (tag.StartsWith("/"))
