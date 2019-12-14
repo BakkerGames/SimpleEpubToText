@@ -90,7 +90,7 @@ namespace SimpleEpubToText
                         case "/blockquote":
                             if (firstLine)
                             {
-                                chapter.Paragraphs.Add("###" + currline.ToString());
+                                chapter.Paragraphs.Add("###" + currline.ToString().TrimEnd());
                                 chapter.Paragraphs.Add("");
                                 firstLine = false;
                                 secondLine = true;
@@ -99,19 +99,19 @@ namespace SimpleEpubToText
                             {
                                 if (currline.Length > 0)
                                 {
-                                    chapter.Paragraphs.Add(currline.ToString());
+                                    chapter.Paragraphs.Add(currline.ToString().TrimEnd());
                                 }
                                 chapter.Paragraphs.Add("_p_---");
                                 secondLine = false;
                             }
                             else if (tag == "/li" && currline.Length > 0)
                             {
-                                chapter.Paragraphs.Add("_p__t_* " + currline.ToString());
+                                chapter.Paragraphs.Add("_p__t_* " + currline.ToString().TrimEnd());
                                 secondLine = false;
                             }
                             else if (!secondLine || currline.Length > 0)
                             {
-                                chapter.Paragraphs.Add("_p_" + currline.ToString());
+                                chapter.Paragraphs.Add("_p_" + currline.ToString().TrimEnd());
                                 secondLine = false;
                             }
                             currline.Clear();
@@ -193,37 +193,69 @@ namespace SimpleEpubToText
                 }
                 if (currline.Length > 0)
                 {
-                    chapter.Paragraphs.Add(currline.ToString());
+                    chapter.Paragraphs.Add(currline.ToString().TrimEnd());
                 }
                 if (chapter.Paragraphs.Count > 0 &&
                     chapter.Paragraphs[0].ToLower() != "###table of contents" &&
                     chapter.Paragraphs[0].ToLower() != "###contents")
                 {
-                    while (chapter.Paragraphs[chapter.Paragraphs.Count - 1].Length == 0 ||
-                           chapter.Paragraphs[chapter.Paragraphs.Count - 1] == "_p_")
+                    while (chapter.Paragraphs.Count > 0 &&
+                             (chapter.Paragraphs[chapter.Paragraphs.Count - 1].Length == 0 ||
+                              chapter.Paragraphs[chapter.Paragraphs.Count - 1] == "_p_")
+                          )
                     {
                         chapter.Paragraphs.RemoveAt(chapter.Paragraphs.Count - 1);
                     }
-                    Chapters.Add(chapter);
+                    while (chapter.Paragraphs.Count >= 3 &&
+                           chapter.Paragraphs[2] == "_p_")
+                    {
+                        chapter.Paragraphs.RemoveAt(2);
+                    }
+                    if (chapter.Paragraphs.Count > 0)
+                    {
+                        Chapters.Add(chapter);
+                    }
                 }
             }
         }
 
         private string FixText(string value)
         {
-            if (value.Contains("_"))
-                value = value.Replace("_", "__");
-            if (value.Contains("“"))
-                value = value.Replace("“", "\"");
-            if (value.Contains("”"))
-                value = value.Replace("”", "\"");
-            if (value.Contains("‘"))
-                value = value.Replace("‘", "'");
-            if (value.Contains("’"))
-                value = value.Replace("’", "'");
-            if (value.Contains("`"))
-                value = value.Replace("`", "'");
-            return value;
+            StringBuilder result = new StringBuilder();
+            foreach (char c in value)
+            {
+                switch (c)
+                {
+                    case '_':
+                        result.Append("__");
+                        break;
+                    case '“':
+                    case '”':
+                        result.Append("\"");
+                        break;
+                    case '‘':
+                    case '’':
+                    case '`':
+                        result.Append("'");
+                        break;
+                    case (char)160: // non-breaking space
+                        result.Append(' ');
+                        break;
+                    default:
+                        if (c < 32 || c > 126)
+                        {
+                            result.Append("_x");
+                            result.Append(((int)c).ToString("x4"));
+                            result.Append("_");
+                        }
+                        else
+                        {
+                            result.Append(c);
+                        }
+                        break;
+                }
+            }
+            return result.ToString();
         }
 
         private string GetTag(string s2)
