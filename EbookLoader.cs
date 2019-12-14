@@ -93,6 +93,7 @@ namespace SimpleEpubToText
                         case "/li":
                         case "hr":
                         case "/ul":
+                        case "/ol":
                         case "/blockquote":
                             if (firstLine)
                             {
@@ -122,7 +123,7 @@ namespace SimpleEpubToText
                             }
                             else if (tag == "/li" && currline.Length > 0)
                             {
-                                chapter.Paragraphs.Add("_p__t_* " + currline.ToString().TrimEnd());
+                                chapter.Paragraphs.Add("_p__t_" + currline.ToString().Trim());
                                 secondLine = false;
                             }
                             else if (!secondLine || currline.Length > 0)
@@ -194,6 +195,20 @@ namespace SimpleEpubToText
                                 currline.Append("_u0_");
                             }
                             break;
+                        case "li":
+                            int pos = s2.IndexOf("value=\"");
+                            if (pos >= 0)
+                            {
+                                pos += 7;
+                                int pos2 = s2.IndexOf("\"", pos);
+                                currline.Append(s2.Substring(pos, pos2 - pos));
+                                currline.Append(": ");
+                            }
+                            else
+                            {
+                                currline.Append("* "); // no list value found
+                            }
+                            break;
                         case "i":
                         case "/i":
                         case "b":
@@ -226,7 +241,7 @@ namespace SimpleEpubToText
                         case "a":
                         case "/a":
                         case "ul":
-                        case "li":
+                        case "ol":
                         case "svg":
                         case "/svg":
                             // ignore all these
