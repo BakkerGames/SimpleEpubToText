@@ -96,6 +96,10 @@ namespace SimpleEpubToText
                         case "/ul":
                         case "/ol":
                         case "/blockquote":
+                        case "/h1":
+                        case "/h2":
+                        case "/h3":
+                        case "/h4":
                             if (inTable)
                             {
                                 continue;
@@ -254,10 +258,38 @@ namespace SimpleEpubToText
                             chapter.Paragraphs.Add(currline.ToString());
                             currline.Clear();
                             break;
+                        case "caption":
+                            currline.Append("_p__caption1_");
+                            break;
+                        case "/caption":
+                            currline.Append("_caption0_");
+                            chapter.Paragraphs.Add(currline.ToString());
+                            currline.Clear();
+                            break;
+                        case "tt":
+                            currline.Append("_code1_");
+                            break;
+                        case "/tt":
+                            currline.Append("_code0_");
+                            break;
+                        case "em":
+                            currline.Append("_i1_");
+                            break;
+                        case "/em":
+                            currline.Append("_i0_");
+                            break;
+                        case "strong":
+                            currline.Append("_b1_");
+                            break;
+                        case "/strong":
+                            currline.Append("_b0_");
+                            break;
                         case "i":
                         case "/i":
                         case "b":
                         case "/b":
+                        case "s":
+                        case "/s":
                         case "u":
                         case "/u":
                         case "sup":
@@ -266,6 +298,8 @@ namespace SimpleEpubToText
                         case "/sub":
                         case "small":
                         case "/small":
+                        case "th":
+                        case "/th":
                         case "td":
                         case "/td":
                             // on-off tag pairs
@@ -291,6 +325,13 @@ namespace SimpleEpubToText
                         case "ol":
                         case "svg":
                         case "/svg":
+                        case "h1":
+                        case "h2":
+                        case "h3":
+                        case "h4":
+                        case "col":
+                        case "colgroup":
+                        case "/colgroup":
                             // ignore all these
                             break;
                         default:
@@ -303,9 +344,39 @@ namespace SimpleEpubToText
                             break;
                     }
                 }
-                if (currline.Length > 0)
+                if (currline.ToString().Trim().Length > 0)
                 {
-                    chapter.Paragraphs.Add(currline.ToString().TrimEnd());
+                    if (firstLine)
+                    {
+                        string s4 = currline.ToString().Trim();
+                        s4 = s4.Replace("_b1_", "");
+                        s4 = s4.Replace("_b0_", "");
+                        s4 = s4.Replace("_i1_", "");
+                        s4 = s4.Replace("_i0_", "");
+                        s4 = s4.Replace("_u1_", "");
+                        s4 = s4.Replace("_u0_", "");
+                        s4 = s4.Replace("_t_", "");
+                        s4 = s4.Replace("_p_", "");
+                        s4 = s4.Trim();
+                        if (s4.StartsWith("_"))
+                        {
+                            chapter.Paragraphs.Add("###");
+                            chapter.Paragraphs.Add("");
+                            chapter.Paragraphs.Add("_p_" + s4);
+                            secondLine = false;
+                        }
+                        else
+                        {
+                            chapter.Paragraphs.Add("###" + s4);
+                            chapter.Paragraphs.Add("");
+                            secondLine = true;
+                        }
+                        firstLine = false;
+                    }
+                    else
+                    {
+                        chapter.Paragraphs.Add(currline.ToString().Trim());
+                    }
                 }
                 if (chapter.Paragraphs.Count > 0 &&
                     !chapter.Paragraphs[0].ToLower().Contains("contents"))
@@ -346,7 +417,7 @@ namespace SimpleEpubToText
                 switch (c)
                 {
                     case '_':
-                        result.Append("__");
+                        result.Append("&#95;"); // underline
                         break;
                     case '<':
                         result.Append("&lt;");

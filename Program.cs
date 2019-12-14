@@ -20,7 +20,7 @@ namespace SimpleEpubToText
                     Console.WriteLine("Syntax: <from_path> <to_path>");
                     return 1;
                 }
-                Console.WriteLine("SimpleEpubToText: {0} {1}", args[0], args[1]);
+                Console.WriteLine("SimpleEpubToText: \"{0}\" to \"{1}\"", args[0], args[1]);
                 if (args.Count() >= 3)
                 {
                     if (args[2].StartsWith("/count:"))
@@ -29,7 +29,7 @@ namespace SimpleEpubToText
                     }
                 }
                 ConvertAllEpub(args[0], args[1]);
-                Console.WriteLine();
+                Console.WriteLine("\r      ");
                 Console.WriteLine($"Files changed: {changedCount}");
                 return 0;
             }
