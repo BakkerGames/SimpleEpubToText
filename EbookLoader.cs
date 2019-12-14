@@ -39,6 +39,7 @@ namespace SimpleEpubToText
                 bool foundBody = false;
                 bool firstLine = true;
                 bool secondLine = false;
+                string imageFile;
                 StringBuilder currline = new StringBuilder();
 
                 // split all the items into html tags and raw text
@@ -55,7 +56,13 @@ namespace SimpleEpubToText
                     if (!s2.StartsWith("<"))
                     {
                         if (foundBody)
+                        {
+                            if (currline.Length > 0)
+                            {
+                                currline.Append(" ");
+                            }
                             currline.Append(s2);
+                        }
                         continue;
                     }
                     string tag = GetTag(s2);
@@ -67,12 +74,12 @@ namespace SimpleEpubToText
                         case "/body":
                             foundBody = false;
                             break;
-                        case "p":
-                            break;
                         case "/p":
                         case "br":
                         case "/li":
                         case "hr":
+                        case "/ul":
+                        case "/blockquote":
                             if (firstLine)
                             {
                                 chapter.Paragraphs.Add("###" + currline.ToString());
@@ -101,6 +108,30 @@ namespace SimpleEpubToText
                             }
                             currline.Clear();
                             break;
+                        case "image":
+                            imageFile = s2.Substring(s2.IndexOf("href=\"") + 6);
+                            imageFile = imageFile.Substring(0, imageFile.IndexOf("\""));
+                            if (imageFile != "cover.jpeg")
+                            {
+                                currline.Append("_image:");
+                                currline.Append(imageFile);
+                                currline.Append("_");
+                            }
+                            break;
+                        case "img":
+                            imageFile = s2.Substring(s2.IndexOf("src=\"") + 5);
+                            imageFile = imageFile.Substring(0, imageFile.IndexOf("\""));
+                            if (imageFile != "cover.jpeg")
+                            {
+                                currline.Append("_image:");
+                                currline.Append(imageFile);
+                                currline.Append("_");
+                            }
+                            break;
+                        case "blockquote":
+                            currline.Append("_t_");
+                            break;
+                        case "p":
                         case "span":
                         case "/span":
                         case "div":
@@ -108,7 +139,6 @@ namespace SimpleEpubToText
                         case "a":
                         case "/a":
                         case "ul":
-                        case "/ul":
                         case "li":
                         case "svg":
                         case "/svg":

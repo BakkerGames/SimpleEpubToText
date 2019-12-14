@@ -100,8 +100,7 @@ namespace SimpleEpubToText
                 }
             }
             File.WriteAllText(outFileFullPath, s.ToString());
-            throw new SystemException();
-            //return true;
+            return true;
         }
     }
 }
