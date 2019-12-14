@@ -52,7 +52,8 @@ namespace SimpleEpubToText
                 {
                     changedCount++;
                     Console.Write("\r");
-                    Console.WriteLine(Path.GetFileName(filepath));
+                    Console.Write(Path.GetFileName(filepath));
+                    Console.WriteLine();
                 }
                 else
                 {
@@ -84,6 +85,7 @@ namespace SimpleEpubToText
                     s.AppendLine();
                 }
                 firstChapter = false;
+                s.Append("###");
                 foreach (string p in c.Paragraphs)
                 {
                     s.AppendLine(p);
@@ -99,7 +101,8 @@ namespace SimpleEpubToText
                 }
             }
             File.WriteAllText(outFileFullPath, s.ToString());
-            return true;
+            throw new SystemException();
+            //return true;
         }
     }
 }

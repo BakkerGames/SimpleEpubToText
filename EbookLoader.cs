@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using VersOne.Epub;
 
@@ -28,6 +29,67 @@ namespace SimpleEpubToText
         #region Private Routines
 
         private void EpubToChapters(string ebookPath)
+        {
+            book = EpubReader.ReadBook(ebookPath);
+            contentFiles = book.ReadingOrder.ToList();
+            Chapters = new List<Chapter>();
+            for (int i = 0; i < contentFiles.Count; i++)
+            {
+                Chapter chapter = new Chapter();
+                bool foundBody = false;
+                StringBuilder currline = new StringBuilder();
+                bool inLine = false;
+                //bool firstLine = true;
+                //bool secondLine = false;
+                //bool joinLines = false;
+
+                // split all the items into html tags and raw text
+                string[] contentText = contentFiles[i].Content
+                                                      .Replace("\r", "")
+                                                      .Replace("\n", "")
+                                                      .Replace(">", ">\n")
+                                                      .Replace("<", "\n<")
+                                                      .Split('\n');
+                foreach (string s in contentText)
+                {
+                    string s2 = s;
+                    if (s2.Length == 0) continue;
+                    if (!foundBody)
+                    {
+                        if (s2.StartsWith("<body"))
+                        {
+                            foundBody = true;
+                        }
+                        continue;
+                    }
+                    if (s2.StartsWith("<p>") || s2.StartsWith("<p "))
+                    {
+                        inLine = true;
+                    }
+                    if (inLine && !s2.StartsWith("<"))
+                    {
+                        if (currline.Length > 0)
+                        {
+                            currline.Append(" ");
+                        }
+                        currline.Append(s2);
+                    }
+                    if (s2 == "</p>")
+                    {
+                        chapter.Paragraphs.Add(currline.ToString());
+                        inLine = false;
+                        currline.Clear();
+                    }
+                }
+                if (chapter.Paragraphs.Count > 0 && 
+                    chapter.Paragraphs[0].ToLower() != "table of contents")
+                {
+                    Chapters.Add(chapter);
+                }
+            }
+        }
+
+        private void EpubToChapters2(string ebookPath)
         {
             book = EpubReader.ReadBook(ebookPath);
             contentFiles = book.ReadingOrder.ToList();
@@ -152,6 +214,7 @@ namespace SimpleEpubToText
                         s1 = s1.Replace("_p_ ", "_p_");
                         s1 = s1.Replace("_br_ ", "_br_");
                         s1 = s1.Replace(" _br_", "_br_");
+                        s1 = Regex.Replace(s1, "_t_  *", "_t_");
                         s1 = s1.Trim();
                         // ignore blank first lines
                         if (firstLine && s1.Length == 0)
@@ -244,7 +307,11 @@ namespace SimpleEpubToText
                 // add to chapter list
                 if (chapter.Paragraphs.Count > 0)
                 {
-                    Chapters.Add(chapter);
+                    if (chapter.Paragraphs[0].ToLower() != "table of contents" &&
+                        chapter.Paragraphs[0].ToLower() != "contents")
+                    {
+                        Chapters.Add(chapter);
+                    }
                 }
             }
         }
