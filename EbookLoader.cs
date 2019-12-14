@@ -97,16 +97,26 @@ namespace SimpleEpubToText
                         case "/blockquote":
                             if (firstLine)
                             {
-                                if (currline.ToString().Trim().StartsWith("_image"))
+                                string s4 = currline.ToString();
+                                s4 = s4.Replace("_b1_", "");
+                                s4 = s4.Replace("_b0_", "");
+                                s4 = s4.Replace("_i1_", "");
+                                s4 = s4.Replace("_i0_", "");
+                                s4 = s4.Replace("_u1_", "");
+                                s4 = s4.Replace("_u0_", "");
+                                s4 = s4.Replace("_t_", "");
+                                s4 = s4.Replace("_p_", "");
+                                s4 = s4.Trim();
+                                if (s4.StartsWith("_"))
                                 {
                                     chapter.Paragraphs.Add("###");
                                     chapter.Paragraphs.Add("");
-                                    chapter.Paragraphs.Add("_p_" + currline.ToString().Trim());
+                                    chapter.Paragraphs.Add("_p_" + s4);
                                     secondLine = false;
                                 }
                                 else
                                 {
-                                    chapter.Paragraphs.Add("###" + currline.ToString().Trim());
+                                    chapter.Paragraphs.Add("###" + s4);
                                     chapter.Paragraphs.Add("");
                                     secondLine = true;
                                 }
