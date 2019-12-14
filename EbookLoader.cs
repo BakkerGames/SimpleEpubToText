@@ -65,11 +65,17 @@ namespace SimpleEpubToText
                     {
                         if (foundBody)
                         {
-                            //if (currline.Length > 0 && !currline.ToString().EndsWith("_"))
-                            //{
-                            //    currline.Append(" ");
-                            //}
-                            currline.Append(FixText(s2));
+                            string s3 = FixText(s2);
+                            if (currline.ToString().EndsWith("_t_") && s3.StartsWith(" "))
+                            {
+                                // change spaces to another _t_
+                                currline.Append("_t_");
+                                currline.Append(s2.TrimStart());
+                            }
+                            else
+                            {
+                                currline.Append(s3);
+                            }
                         }
                         continue;
                     }
@@ -90,10 +96,20 @@ namespace SimpleEpubToText
                         case "/blockquote":
                             if (firstLine)
                             {
-                                chapter.Paragraphs.Add("###" + currline.ToString().TrimEnd());
-                                chapter.Paragraphs.Add("");
+                                if (currline.ToString().Trim().StartsWith("_image"))
+                                {
+                                    chapter.Paragraphs.Add("###");
+                                    chapter.Paragraphs.Add("");
+                                    chapter.Paragraphs.Add("_p_" + currline.ToString().Trim());
+                                    secondLine = false;
+                                }
+                                else
+                                {
+                                    chapter.Paragraphs.Add("###" + currline.ToString().Trim());
+                                    chapter.Paragraphs.Add("");
+                                    secondLine = true;
+                                }
                                 firstLine = false;
-                                secondLine = true;
                             }
                             else if (tag == "hr")
                             {
@@ -111,7 +127,7 @@ namespace SimpleEpubToText
                             }
                             else if (!secondLine || currline.Length > 0)
                             {
-                                chapter.Paragraphs.Add("_p_" + currline.ToString().TrimEnd());
+                                chapter.Paragraphs.Add("_p_" + currline.ToString().Trim());
                                 secondLine = false;
                             }
                             currline.Clear();
@@ -199,17 +215,17 @@ namespace SimpleEpubToText
                     chapter.Paragraphs[0].ToLower() != "###table of contents" &&
                     chapter.Paragraphs[0].ToLower() != "###contents")
                 {
+                    while (chapter.Paragraphs.Count >= 3 &&
+                           chapter.Paragraphs[2] == "_p_")
+                    {
+                        chapter.Paragraphs.RemoveAt(2);
+                    }
                     while (chapter.Paragraphs.Count > 0 &&
                              (chapter.Paragraphs[chapter.Paragraphs.Count - 1].Length == 0 ||
                               chapter.Paragraphs[chapter.Paragraphs.Count - 1] == "_p_")
                           )
                     {
                         chapter.Paragraphs.RemoveAt(chapter.Paragraphs.Count - 1);
-                    }
-                    while (chapter.Paragraphs.Count >= 3 &&
-                           chapter.Paragraphs[2] == "_p_")
-                    {
-                        chapter.Paragraphs.RemoveAt(2);
                     }
                     if (chapter.Paragraphs.Count > 0)
                     {
@@ -229,6 +245,12 @@ namespace SimpleEpubToText
                     case '_':
                         result.Append("__");
                         break;
+                    case '<':
+                        result.Append("&lt;");
+                        break;
+                    case '>':
+                        result.Append("&gt;");
+                        break;
                     case '“':
                     case '”':
                         result.Append("\"");
@@ -241,12 +263,23 @@ namespace SimpleEpubToText
                     case (char)160: // non-breaking space
                         result.Append(' ');
                         break;
+                    case (char)8211:
+                        result.Append("&ndash;");
+                        break;
+                    case (char)8212:
+                        result.Append("&mdash;");
+                        break;
+                    case (char)8230:
+                        result.Append("...");
+                        break;
                     default:
-                        if (c < 32 || c > 126)
+                        if (c < 32 || c > 255 ||
+                            c == 127 || c == 129 || c == 141 || c == 143 || c == 144 || c == 157
+                            )
                         {
-                            result.Append("_x");
+                            result.Append("&#x");
                             result.Append(((int)c).ToString("x4"));
-                            result.Append("_");
+                            result.Append(";");
                         }
                         else
                         {
