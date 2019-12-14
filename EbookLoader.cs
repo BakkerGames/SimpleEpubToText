@@ -46,6 +46,7 @@ namespace SimpleEpubToText
                 // split all the items into html tags and raw text
                 string[] contentText = contentFiles[i].Content
                                                       .Replace("\r", "")
+                                                      .Replace("</span>\n<span", "</span> <span")
                                                       .Replace("\n", "")
                                                       .Replace(">", ">\n")
                                                       .Replace("<", "\n<")
@@ -116,6 +117,10 @@ namespace SimpleEpubToText
                                 s4 = s4.Replace("_t_", "");
                                 s4 = s4.Replace("_p_", "");
                                 s4 = s4.Trim();
+                                if (s4.Length == 0)
+                                {
+                                    continue;
+                                }
                                 if (s4.StartsWith("_"))
                                 {
                                     chapter.Paragraphs.Add("###");
@@ -435,7 +440,13 @@ namespace SimpleEpubToText
                         result.Append("'");
                         break;
                     case (char)160: // non-breaking space
+                    case (char)8201: // thin space
+                    case (char)8202: // hair space
                         result.Append(' ');
+                        break;
+                    case (char)8203: // zero width space
+                    case (char)8204: // zero width non-joiner
+                    case (char)8205: // zero width joiner
                         break;
                     case (char)194: // non-breaking space
                         result.Append('.');
@@ -449,7 +460,16 @@ namespace SimpleEpubToText
                     case (char)8230:
                         result.Append("...");
                         break;
+                    case (char)8224: // dagger
+                    case (char)8225: // double dagger
+                    case (char)8226: // bullet
+                        result.Append("*");
+                        break;
                     default:
+                        if (c > 32767)
+                        {
+                            break;
+                        }
                         if (c < 32 || c > 255 ||
                             c == 127 || c == 129 || c == 141 || c == 143 || c == 144 || c == 157
                             )
