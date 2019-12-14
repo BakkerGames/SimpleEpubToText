@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using VersOne.Epub;
 
 namespace SimpleEpubToText
@@ -41,6 +40,7 @@ namespace SimpleEpubToText
                 bool secondLine = false;
                 string imageFile;
                 StringBuilder currline = new StringBuilder();
+                Stack<string> spanStack = new Stack<string>();
 
                 // split all the items into html tags and raw text
                 string[] contentText = contentFiles[i].Content
@@ -158,6 +158,42 @@ namespace SimpleEpubToText
                                 currline.Append("_t_");
                             }
                             break;
+                        case "span":
+                            if (s2.Contains("\"bold\""))
+                            {
+                                spanStack.Push("b");
+                                currline.Append("_b1_");
+                            }
+                            else if (s2.Contains("\"italics\""))
+                            {
+                                spanStack.Push("i");
+                                currline.Append("_i1_");
+                            }
+                            else if (s2.Contains("\"underline\""))
+                            {
+                                spanStack.Push("u");
+                                currline.Append("_u1_");
+                            }
+                            else
+                            {
+                                spanStack.Push("");
+                            }
+                            break;
+                        case "/span":
+                            string spanPop = spanStack.Pop();
+                            if (spanPop == "b")
+                            {
+                                currline.Append("_b0_");
+                            }
+                            else if (spanPop == "i")
+                            {
+                                currline.Append("_i0_");
+                            }
+                            else if (spanPop == "u")
+                            {
+                                currline.Append("_u0_");
+                            }
+                            break;
                         case "i":
                         case "/i":
                         case "b":
@@ -185,8 +221,6 @@ namespace SimpleEpubToText
                             currline.Append("_");
                             break;
                         case "p":
-                        case "span":
-                        case "/span":
                         case "div":
                         case "/div":
                         case "a":
@@ -212,8 +246,7 @@ namespace SimpleEpubToText
                     chapter.Paragraphs.Add(currline.ToString().TrimEnd());
                 }
                 if (chapter.Paragraphs.Count > 0 &&
-                    chapter.Paragraphs[0].ToLower() != "###table of contents" &&
-                    chapter.Paragraphs[0].ToLower() != "###contents")
+                    !chapter.Paragraphs[0].ToLower().Contains("contents"))
                 {
                     while (chapter.Paragraphs.Count >= 3 &&
                            chapter.Paragraphs[2] == "_p_")
@@ -229,6 +262,14 @@ namespace SimpleEpubToText
                     }
                     if (chapter.Paragraphs.Count > 0)
                     {
+                        if (chapter.Paragraphs[0].Contains("_b"))
+                        {
+                            chapter.Paragraphs[0] = chapter.Paragraphs[0].Replace("_b1_", "").Replace("_b0_", "");
+                        }
+                        if (chapter.Paragraphs[0].Contains("_u"))
+                        {
+                            chapter.Paragraphs[0] = chapter.Paragraphs[0].Replace("_u1_", "").Replace("_u0_", "");
+                        }
                         Chapters.Add(chapter);
                     }
                 }
@@ -262,6 +303,9 @@ namespace SimpleEpubToText
                         break;
                     case (char)160: // non-breaking space
                         result.Append(' ');
+                        break;
+                    case (char)194: // non-breaking space
+                        result.Append('.');
                         break;
                     case (char)8211:
                         result.Append("&ndash;");
