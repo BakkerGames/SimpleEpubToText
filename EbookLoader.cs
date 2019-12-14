@@ -57,7 +57,7 @@ namespace SimpleEpubToText
                     {
                         if (foundBody)
                         {
-                            if (currline.Length > 0)
+                            if (currline.Length > 0 && currline.ToString() != "_t_")
                             {
                                 currline.Append(" ");
                             }
