@@ -39,6 +39,7 @@ namespace SimpleEpubToText
                 bool firstLine = true;
                 bool secondLine = false;
                 bool inTable = false;
+                bool inComment = false;
                 string imageFile;
                 StringBuilder currline = new StringBuilder();
                 Stack<string> spanStack = new Stack<string>();
@@ -63,6 +64,40 @@ namespace SimpleEpubToText
                         s2 = s;
                     }
                     if (s2.Length == 0) continue;
+                    if (inComment)
+                    {
+                        if (s2.Contains("-->"))
+                        {
+                            inComment = false;
+                            int pos2 = s2.IndexOf("-->");
+                            if (pos2 + 3 >= s2.Length)
+                            {
+                                continue;
+                            }
+                            s2 = s2.Substring(pos2 + 3);
+                            if (s2.Length == 0) continue;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                    if (s2.Contains("<!--"))
+                    {
+                        inComment = true;
+                        int pos = s2.IndexOf("<!--");
+                        int pos2 = s2.IndexOf("-->", pos);
+                        if (pos2 > pos)
+                        {
+                            s2 = s2.Remove(pos, pos2 - pos + 3);
+                            inComment = false;
+                        }
+                        else
+                        {
+                            s2 = s2.Substring(0, pos);
+                        }
+                        if (s2.Length == 0) continue;
+                    }
                     if (!s2.StartsWith("<"))
                     {
                         if (foundBody)
@@ -91,6 +126,7 @@ namespace SimpleEpubToText
                             foundBody = false;
                             break;
                         case "/p":
+                        case "/div":
                         case "br":
                         case "/li":
                         case "hr":
@@ -193,7 +229,7 @@ namespace SimpleEpubToText
                                 spanStack.Push("b");
                                 currline.Append("_b1_");
                             }
-                            else if (s2.Contains("\"italics\""))
+                            else if (s2.Contains("\"italic\""))
                             {
                                 spanStack.Push("i");
                                 currline.Append("_i1_");
@@ -323,7 +359,6 @@ namespace SimpleEpubToText
                             break;
                         case "p":
                         case "div":
-                        case "/div":
                         case "a":
                         case "/a":
                         case "ul":
@@ -337,6 +372,8 @@ namespace SimpleEpubToText
                         case "col":
                         case "colgroup":
                         case "/colgroup":
+                        case "section":
+                        case "/section":
                             // ignore all these
                             break;
                         default:
@@ -368,15 +405,18 @@ namespace SimpleEpubToText
                             chapter.Paragraphs.Add("###");
                             chapter.Paragraphs.Add("");
                             chapter.Paragraphs.Add("_p_" + s4);
-                            secondLine = false;
+                        }
+                        else if (s4.Contains("_"))
+                        {
+                            chapter.Paragraphs.Add("###" + s4.Substring(0, s4.IndexOf("_")).Trim());
+                            chapter.Paragraphs.Add("");
+                            chapter.Paragraphs.Add("_p_" + s4.Substring(s4.IndexOf("_")).Trim());
                         }
                         else
                         {
                             chapter.Paragraphs.Add("###" + s4);
                             chapter.Paragraphs.Add("");
-                            secondLine = true;
                         }
-                        firstLine = false;
                     }
                     else
                     {
@@ -404,9 +444,21 @@ namespace SimpleEpubToText
                         {
                             chapter.Paragraphs[0] = chapter.Paragraphs[0].Replace("_b1_", "").Replace("_b0_", "");
                         }
+                        if (chapter.Paragraphs[0].Contains("_i"))
+                        {
+                            // could be _image_, but will be ignored
+                            chapter.Paragraphs[0] = chapter.Paragraphs[0].Replace("_i1_", "").Replace("_i0_", "");
+                        }
                         if (chapter.Paragraphs[0].Contains("_u"))
                         {
                             chapter.Paragraphs[0] = chapter.Paragraphs[0].Replace("_u1_", "").Replace("_u0_", "");
+                        }
+                        for (int para = chapter.Paragraphs.Count - 1; para > 1; para--)
+                        {
+                            if (chapter.Paragraphs[para] == "_p_" && chapter.Paragraphs[para-1] == "_p_")
+                            {
+                                chapter.Paragraphs.RemoveAt(para);
+                            }
                         }
                         Chapters.Add(chapter);
                     }
@@ -439,6 +491,7 @@ namespace SimpleEpubToText
                     case '`':
                         result.Append("'");
                         break;
+                    case '\t':
                     case (char)160: // non-breaking space
                     case (char)8201: // thin space
                     case (char)8202: // hair space
