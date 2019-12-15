@@ -98,7 +98,7 @@ namespace SimpleEpubToText
         private static bool DoConversion(string fromFolder, string toFolder, string filename)
         {
             EbookLoader ebook = new EbookLoader(Path.Combine(fromFolder, filename));
-            string outFilename = filename.Replace(".epub", ".txt").Replace("_nodrm", "");
+            string outFilename = filename.Replace(".epub", "").Replace("_nodrm", "").Replace(".","_") + ".txt";
             StringBuilder s = new StringBuilder();
             bool firstChapter = true;
             foreach (Chapter c in ebook.Chapters)
