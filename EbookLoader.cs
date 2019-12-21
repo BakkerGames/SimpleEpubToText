@@ -40,6 +40,7 @@ namespace SimpleEpubToText
                 bool secondLine = false;
                 bool inTable = false;
                 bool inComment = false;
+                bool inBlockquote = false;
                 string imageFile;
                 StringBuilder currline = new StringBuilder();
                 Stack<string> spanStack = new Stack<string>();
@@ -125,6 +126,40 @@ namespace SimpleEpubToText
                         case "/body":
                             foundBody = false;
                             break;
+                        case "blockquote":
+                            if (inBlockquote)
+                            {
+                                // avoid nested blockquotes
+                                continue;
+                            }
+                            if (inTable)
+                            {
+                                continue;
+                            }
+                            inBlockquote = true;
+                            if (!currline.ToString().EndsWith("_t_"))
+                            {
+                                currline.Append("_t_");
+                            }
+                            break;
+                        case "/blockquote":
+                            if (!inBlockquote)
+                            {
+                                // avoid nested blockquotes
+                                continue;
+                            }
+                            if (inTable)
+                            {
+                                continue;
+                            }
+                            inBlockquote = false;
+                            if (!secondLine || currline.Length > 0)
+                            {
+                                chapter.Paragraphs.Add("_p_" + currline.ToString().Trim());
+                                secondLine = false;
+                            }
+                            currline.Clear();
+                            break;
                         case "/p":
                         case "/div":
                         case "br":
@@ -132,7 +167,6 @@ namespace SimpleEpubToText
                         case "hr":
                         case "/ul":
                         case "/ol":
-                        case "/blockquote":
                         case "/h1":
                         case "/h2":
                         case "/h3":
@@ -164,12 +198,26 @@ namespace SimpleEpubToText
                                     chapter.Paragraphs.Add("_p_" + s4);
                                     secondLine = false;
                                 }
+                                else if (char.IsDigit(s4[0]) || s4.ToUpper().StartsWith("CHAPTER"))
+                                {
+                                    chapter.Paragraphs.Add("###" + s4);
+                                    chapter.Paragraphs.Add("");
+                                    secondLine = true;
+                                }
+                                else if (s4.Length > 100) // too long for chapter
+                                {
+                                    chapter.Paragraphs.Add("###");
+                                    chapter.Paragraphs.Add("");
+                                    chapter.Paragraphs.Add("_p_" + s4);
+                                    secondLine = false;
+                                }
                                 else
                                 {
                                     chapter.Paragraphs.Add("###" + s4);
                                     chapter.Paragraphs.Add("");
                                     secondLine = true;
                                 }
+
                                 firstLine = false;
                             }
                             else if (tag == "hr")
@@ -211,16 +259,6 @@ namespace SimpleEpubToText
                                 currline.Append("_image:");
                                 currline.Append(imageFile);
                                 currline.Append("_");
-                            }
-                            break;
-                        case "blockquote":
-                            if (inTable)
-                            {
-                                continue;
-                            }
-                            if (!currline.ToString().EndsWith("_t_"))
-                            {
-                                currline.Append("_t_");
                             }
                             break;
                         case "span":
@@ -455,7 +493,7 @@ namespace SimpleEpubToText
                         }
                         for (int para = chapter.Paragraphs.Count - 1; para > 1; para--)
                         {
-                            if (chapter.Paragraphs[para] == "_p_" && chapter.Paragraphs[para-1] == "_p_")
+                            if (chapter.Paragraphs[para] == "_p_" && chapter.Paragraphs[para - 1] == "_p_")
                             {
                                 chapter.Paragraphs.RemoveAt(para);
                             }

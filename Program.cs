@@ -23,9 +23,9 @@ namespace SimpleEpubToText
                 Console.WriteLine("SimpleEpubToText: \"{0}\" to \"{1}\"", args[0], args[1]);
                 if (args.Count() >= 3)
                 {
-                    if (args[2].StartsWith("/count:"))
+                    if (args[2].StartsWith("/max="))
                     {
-                        maxFiles = int.Parse(args[2].Substring(7));
+                        maxFiles = int.Parse(args[2].Substring(5));
                     }
                 }
                 ConvertAllEpub(args[0], args[1]);
@@ -98,7 +98,7 @@ namespace SimpleEpubToText
         private static bool DoConversion(string fromFolder, string toFolder, string filename)
         {
             EbookLoader ebook = new EbookLoader(Path.Combine(fromFolder, filename));
-            string outFilename = filename.Replace(".epub", "").Replace("_nodrm", "").Replace(".","_") + ".txt";
+            string outFilename = filename.Replace(".epub", "").Replace("_nodrm", "").Replace(".", "_") + ".txt";
             StringBuilder s = new StringBuilder();
             bool firstChapter = true;
             foreach (Chapter c in ebook.Chapters)
@@ -114,17 +114,84 @@ namespace SimpleEpubToText
                     s.AppendLine(p);
                 }
             }
+            string outFileText = ReformatEbook(s.ToString());
             string outFileFullPath = Path.Combine(toFolder, outFilename);
             if (File.Exists(outFileFullPath))
             {
-                string oldFile = File.ReadAllText(outFileFullPath);
-                if (oldFile == s.ToString())
+                string oldFileText = File.ReadAllText(outFileFullPath);
+                if (oldFileText == outFileText)
                 {
                     return false;
                 }
             }
-            File.WriteAllText(outFileFullPath, s.ToString());
+            File.WriteAllText(outFileFullPath, outFileText);
             return true;
+        }
+
+        private static string ReformatEbook(string value)
+        {
+            StringBuilder result = new StringBuilder();
+            string[] lines = value.Replace("\r", "").Split('\n');
+            int blanklines = 0;
+            foreach (string currline in lines)
+            {
+                int pos;
+                int pos2;
+                string s = currline;
+                if (s == "###")
+                {
+                    s = ":Chapter"; // non-display chapter titles
+                }
+                s = s.Replace("###", ""); // remove chapter markers
+                s = s.Replace("_i1_", "<i>").Replace("_i0_", "</i>"); // adjust italic to html
+                s = s.Replace("_b1_", "").Replace("_b0_", ""); // remove bold
+                s = s.Replace("_u1_", "").Replace("_u0_", ""); // remove underline
+                s = s.Replace("_small1_", "").Replace("_small0_", ""); // remove small
+                s = s.Replace("_sup1_", "<sup>").Replace("_sup0_", "</sup>"); // adjust superpos to html
+                s = s.Replace("_sub1_", "<sub>").Replace("_sub0_", "</sub>"); // adjust subpos to html
+                s = s.Replace("_p_", "\t"); // beginning of paragraphs
+                s = s.Replace("_t_", "\t"); // blockquote
+                s = s.Replace("&mdash;", "--");
+                s = s.Replace("&ndash;", "--");
+                pos = s.IndexOf("_image:");
+                if (pos >= 0)
+                {
+                    s = s.Substring(0, pos) + "<image=" + s.Substring(pos + 7);
+                    pos2 = s.IndexOf("_", pos);
+                    if (pos2 >= 0)
+                    {
+                        s = s.Substring(0, pos2) + ">" + s.Substring(pos2 + 1);
+                    }
+                }
+                // cleanup simple issues
+                s = s.Replace("</i><i>", "");
+                if (s.EndsWith(" </i>"))
+                {
+                    s = s.Substring(0, s.Length - 4).TrimEnd() + "</i>";
+                }
+                while (s.EndsWith("\t") || s.EndsWith(" "))
+                {
+                    s = s.Substring(0, s.Length - 1);
+                }
+                // check for blanklines
+                if (s == "")
+                {
+                    if (blanklines < 2) // max of 2 lines
+                    {
+                        blanklines++;
+                    }
+                }
+                else
+                {
+                    while (blanklines > 0)
+                    {
+                        result.AppendLine();
+                        blanklines--;
+                    }
+                    result.AppendLine(s);
+                }
+            }
+            return result.ToString();
         }
     }
 }
