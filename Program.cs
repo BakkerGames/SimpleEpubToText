@@ -146,15 +146,29 @@ namespace SimpleEpubToText
                 s = s.Replace("_i1_", "<i>").Replace("_i0_", "</i>"); // adjust italic to html
                 s = s.Replace("_b1_", "").Replace("_b0_", ""); // remove bold
                 s = s.Replace("_u1_", "").Replace("_u0_", ""); // remove underline
+                s = s.Replace("_s1_", "").Replace("_s0_", ""); // remove small
                 s = s.Replace("_small1_", "").Replace("_small0_", ""); // remove small
                 s = s.Replace("_sup1_", "<sup>").Replace("_sup0_", "</sup>"); // adjust superpos to html
                 s = s.Replace("_sub1_", "<sub>").Replace("_sub0_", "</sub>"); // adjust subpos to html
                 s = s.Replace("_p_", "\t"); // beginning of paragraphs
                 s = s.Replace("_t_", "\t"); // blockquote
-                s = s.Replace("&mdash;", "--");
-                s = s.Replace("&ndash;", "--");
+                if (s.Contains("_t"))
+                {
+                    s = s.Replace("_table1_", "<table>");
+                    s = s.Replace("_table0_", "</table>");
+                    s = s.Replace("_tr1_", "<tr>");
+                    s = s.Replace("_tr0_", "</tr>");
+                    s = s.Replace("_th1_", "<th>");
+                    s = s.Replace("_th0_", "</th>");
+                    s = s.Replace("_td1_", "<td>");
+                    s = s.Replace("_td0_", "</td>");
+                }
+                s = s.Replace("_code1_", "<code>");
+                s = s.Replace("_code0_", "</code>");
+                s = s.Replace("&mdash;", "—").Replace("—-", "—").Replace("-—", "—");
+                s = s.Replace("&ndash;", "-");
                 pos = s.IndexOf("_image:");
-                if (pos >= 0)
+                while (pos >= 0)
                 {
                     s = s.Substring(0, pos) + "<image=" + s.Substring(pos + 7);
                     pos2 = s.IndexOf("_", pos);
@@ -162,12 +176,32 @@ namespace SimpleEpubToText
                     {
                         s = s.Substring(0, pos2) + ">" + s.Substring(pos2 + 1);
                     }
+                    pos = s.IndexOf("_image:");
                 }
                 // cleanup simple issues
-                s = s.Replace("</i><i>", "");
                 if (s.EndsWith(" </i>"))
                 {
                     s = s.Substring(0, s.Length - 4).TrimEnd() + "</i>";
+                }
+                while (s.Contains("  ") && !s.Contains("_code"))
+                {
+                    s = s.Replace("  ", " ");
+                }
+                if (s.Contains("</i> <i>"))
+                {
+                    s = s.Replace("</i> <i>", " ");
+                }
+                if (s.Contains("</i><i>"))
+                {
+                    s = s.Replace("</i><i>", "");
+                }
+                while (s.Contains("  ") && !s.Contains("_code"))
+                {
+                    s = s.Replace("  ", " ");
+                }
+                while (s.Contains("\t "))
+                {
+                    s = s.Replace("\t ", "\t");
                 }
                 while (s.EndsWith("\t") || s.EndsWith(" "))
                 {
