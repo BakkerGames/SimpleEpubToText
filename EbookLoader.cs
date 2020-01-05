@@ -187,7 +187,6 @@ namespace SimpleEpubToText
                                 s4 = s4.Replace("_u1_", "");
                                 s4 = s4.Replace("_u0_", "");
                                 s4 = s4.Replace("_t_", "");
-                                s4 = s4.Replace("_p_", "");
                                 s4 = s4.Trim();
                                 if (s4.Length == 0)
                                 {
@@ -461,7 +460,6 @@ namespace SimpleEpubToText
                             }
                             currline.Append("_");
                             break;
-                        case "p":
                         case "div":
                         case "a":
                         case "/a":
@@ -479,6 +477,8 @@ namespace SimpleEpubToText
                         case "section":
                         case "/section":
                             // ignore all these
+                            break;
+                        case "p":
                             break;
                         default:
                             if (foundBody)
@@ -502,7 +502,6 @@ namespace SimpleEpubToText
                         s4 = s4.Replace("_u1_", "");
                         s4 = s4.Replace("_u0_", "");
                         s4 = s4.Replace("_t_", "");
-                        s4 = s4.Replace("_p_", "");
                         s4 = s4.Trim();
                         if (s4.StartsWith("_"))
                         {

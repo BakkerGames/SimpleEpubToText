@@ -150,8 +150,8 @@ namespace SimpleEpubToText
                 s = s.Replace("_small1_", "").Replace("_small0_", ""); // remove small
                 s = s.Replace("_sup1_", "<sup>").Replace("_sup0_", "</sup>"); // adjust superpos to html
                 s = s.Replace("_sub1_", "<sub>").Replace("_sub0_", "</sub>"); // adjust subpos to html
-                s = s.Replace("_p_", "\t"); // beginning of paragraphs
                 s = s.Replace("_t_", "\t"); // blockquote
+                s = s.Replace("_p_", "\t"); // beginning of paragraphs
                 if (s.Contains("_t"))
                 {
                     s = s.Replace("_table1_", "<table>");
