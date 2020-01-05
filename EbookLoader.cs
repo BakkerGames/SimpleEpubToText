@@ -54,6 +54,7 @@ namespace SimpleEpubToText
                                                       .Replace("\n", "")
                                                       .Replace(">", ">\n")
                                                       .Replace("<", "\n<")
+                                                      .Replace((char)160, ' ')
                                                       .Split('\n');
                 foreach (string s in contentText)
                 {
