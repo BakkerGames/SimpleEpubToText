@@ -39,6 +39,8 @@ namespace SimpleEpubToText
                 bool firstLine = true;
                 bool secondLine = false;
                 bool inTable = false;
+                bool hasTableRows = false;
+                int tableDepth = 0;
                 bool inComment = false;
                 bool inBlockquote = false;
                 string imageFile;
@@ -313,6 +315,15 @@ namespace SimpleEpubToText
                             break;
                         case "table":
                             inTable = true;
+                            if (tableDepth == 0)
+                            {
+                                hasTableRows = false;
+                            }
+                            tableDepth++;
+                            if (!hasTableRows)
+                            {
+                                break;
+                            }
                             if (currline.Length > 0)
                             {
                                 chapter.Paragraphs.Add(currline.ToString());
@@ -321,7 +332,16 @@ namespace SimpleEpubToText
                             chapter.Paragraphs.Add("_p__table1_");
                             break;
                         case "/table":
-                            inTable = false;
+                            tableDepth--;
+                            if (tableDepth <= 0)
+                            {
+                                tableDepth = 0;
+                                inTable = false;
+                            }
+                            if (!hasTableRows)
+                            {
+                                break;
+                            }
                             if (currline.Length > 0)
                             {
                                 chapter.Paragraphs.Add(currline.ToString());
@@ -330,9 +350,32 @@ namespace SimpleEpubToText
                             chapter.Paragraphs.Add("_p__table0_");
                             break;
                         case "tr":
+                            if (!inTable)
+                            {
+                                Console.WriteLine("<tr> outside table error");
+                                break;
+                            }
+                            if (!hasTableRows)
+                            {
+                                if (currline.Length > 0)
+                                {
+                                    chapter.Paragraphs.Add(currline.ToString());
+                                    currline.Clear();
+                                }
+                                for (int trI = 0; trI < tableDepth; trI++)
+                                {
+                                    chapter.Paragraphs.Add("_p__table1_");
+                                }
+                                hasTableRows = true;
+                            }
                             currline.Append("_p__tr1_");
                             break;
                         case "/tr":
+                            if (!inTable)
+                            {
+                                Console.WriteLine("</tr> outside table error");
+                                break;
+                            }
                             currline.Append("_tr0_");
                             chapter.Paragraphs.Add(currline.ToString());
                             currline.Clear();
@@ -377,11 +420,34 @@ namespace SimpleEpubToText
                         case "/sub":
                         case "small":
                         case "/small":
+                            // on-off tag pairs
+                            currline.Append("_");
+                            if (tag.StartsWith("/"))
+                            {
+                                currline.Append(tag.Substring(1));
+                                currline.Append("0"); // off
+                            }
+                            else
+                            {
+                                currline.Append(tag);
+                                currline.Append("1"); // on
+                            }
+                            currline.Append("_");
+                            break;
                         case "th":
                         case "/th":
                         case "td":
                         case "/td":
+                            if (!inTable)
+                            {
+                                Console.WriteLine($"<{tag}> outside table error");
+                                break; // ignore all these if not in table
+                            }
                             // on-off tag pairs
+                            if (currline.Length == 0)
+                            {
+                                currline.Append("_p_");
+                            }
                             currline.Append("_");
                             if (tag.StartsWith("/"))
                             {
