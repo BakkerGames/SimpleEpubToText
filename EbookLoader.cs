@@ -55,6 +55,7 @@ namespace SimpleEpubToText
                                                       .Replace(">", ">\n")
                                                       .Replace("<", "\n<")
                                                       .Replace((char)160, ' ')
+                                                      .Replace("_", "&#95;") // underline
                                                       .Split('\n');
                 foreach (string s in contentText)
                 {
@@ -381,9 +382,19 @@ namespace SimpleEpubToText
                             currline.Clear();
                             break;
                         case "caption":
+                            if (!inTable)
+                            {
+                                Console.WriteLine("<caption> outside table error");
+                                break;
+                            }
                             currline.Append("_p__caption1_");
                             break;
                         case "/caption":
+                            if (!inTable)
+                            {
+                                Console.WriteLine("</caption> outside table error");
+                                break;
+                            }
                             currline.Append("_caption0_");
                             chapter.Paragraphs.Add(currline.ToString());
                             currline.Clear();

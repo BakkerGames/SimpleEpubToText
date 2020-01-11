@@ -132,100 +132,229 @@ namespace SimpleEpubToText
         {
             StringBuilder result = new StringBuilder();
             string[] lines = value.Replace("\r", "").Split('\n');
-            int blanklines = 0;
+            int blankLines = 0;
             foreach (string currline in lines)
             {
-                int pos;
-                int pos2;
-                string s = currline;
-                if (s == "###")
-                {
-                    s = ":Chapter"; // non-display chapter titles
-                }
-                s = s.Replace("###", ""); // remove chapter markers
-                s = s.Replace("_i1_", "<i>").Replace("_i0_", "</i>"); // adjust italic to html
-                s = s.Replace("_b1_", "").Replace("_b0_", ""); // remove bold
-                s = s.Replace("_u1_", "").Replace("_u0_", ""); // remove underline
-                s = s.Replace("_s1_", "").Replace("_s0_", ""); // remove small
-                s = s.Replace("_small1_", "").Replace("_small0_", ""); // remove small
-                s = s.Replace("_sup1_", "<sup>").Replace("_sup0_", "</sup>"); // adjust superpos to html
-                s = s.Replace("_sub1_", "<sub>").Replace("_sub0_", "</sub>"); // adjust subpos to html
-                s = s.Replace("_t_", "\t"); // blockquote
-                s = s.Replace("_p_", "\t"); // beginning of paragraphs
-                if (s.Contains("_t"))
-                {
-                    s = s.Replace("_table1_", "<table>");
-                    s = s.Replace("_table0_", "</table>");
-                    s = s.Replace("_tr1_", "<tr>");
-                    s = s.Replace("_tr0_", "</tr>");
-                    s = s.Replace("_th1_", "<th>");
-                    s = s.Replace("_th0_", "</th>");
-                    s = s.Replace("_td1_", "<td>");
-                    s = s.Replace("_td0_", "</td>");
-                }
-                s = s.Replace("_code1_", "<code>");
-                s = s.Replace("_code0_", "</code>");
-                s = s.Replace("&mdash;", "—").Replace("—-", "—").Replace("-—", "—");
-                s = s.Replace("&ndash;", "-");
-                pos = s.IndexOf("_image:");
-                while (pos >= 0)
-                {
-                    s = s.Substring(0, pos) + "<image=" + s.Substring(pos + 7);
-                    pos2 = s.IndexOf("_", pos);
-                    if (pos2 >= 0)
-                    {
-                        s = s.Substring(0, pos2) + ">" + s.Substring(pos2 + 1);
-                    }
-                    pos = s.IndexOf("_image:");
-                }
-                // cleanup simple issues
-                if (s.EndsWith(" </i>"))
-                {
-                    s = s.Substring(0, s.Length - 4).TrimEnd() + "</i>";
-                }
-                while (s.Contains("  ") && !s.Contains("_code"))
-                {
-                    s = s.Replace("  ", " ");
-                }
-                if (s.Contains("</i> <i>"))
-                {
-                    s = s.Replace("</i> <i>", " ");
-                }
-                if (s.Contains("</i><i>"))
-                {
-                    s = s.Replace("</i><i>", "");
-                }
-                while (s.Contains("  ") && !s.Contains("_code"))
-                {
-                    s = s.Replace("  ", " ");
-                }
-                while (s.Contains("\t "))
-                {
-                    s = s.Replace("\t ", "\t");
-                }
-                while (s.EndsWith("\t") || s.EndsWith(" "))
-                {
-                    s = s.Substring(0, s.Length - 1);
-                }
+                string s = ConvertLine(currline);
                 // check for blanklines
                 if (s == "")
                 {
-                    if (blanklines < 2) // max of 2 lines
+                    if (blankLines < 2) // max of 2 lines
                     {
-                        blanklines++;
+                        blankLines++;
                     }
                 }
                 else
                 {
-                    while (blanklines > 0)
+                    while (blankLines > 0)
                     {
                         result.AppendLine();
-                        blanklines--;
+                        blankLines--;
                     }
                     result.AppendLine(s);
                 }
             }
             return result.ToString();
         }
+
+        private static string ConvertLine(string s)
+        {
+            StringBuilder result = new StringBuilder();
+            bool inTag = false;
+            bool inCode = false;
+            bool lastSpace = false;
+            string tag = "";
+            foreach (char c in s)
+            {
+                if (c == ' ')
+                {
+                    if (lastSpace && !inCode && !inTag)
+                    {
+                        continue;
+                    }
+                    lastSpace = true;
+                }
+                else
+                {
+                    lastSpace = false;
+                }
+                if (c == '_')
+                {
+                    if (inTag)
+                    {
+                        if (tag == "code1")
+                        {
+                            inCode = true;
+                        }
+                        else if (tag == "code0")
+                        {
+                            inCode = false;
+                        }
+                        string newTag = ProcessTag(tag);
+                        if (newTag == "" && result.Length > 0)
+                        {
+                            if (result[result.Length - 1] == ' ')
+                            {
+                                lastSpace = true;
+                            }
+                        }
+                        result.Append(newTag);
+                        inTag = false;
+                    }
+                    else
+                    {
+                        inTag = true;
+                        tag = "";
+                    }
+                }
+                else if (inTag)
+                {
+                    tag += c;
+                }
+                else
+                {
+                    result.Append(c);
+                }
+            }
+            string newResult = result.ToString();
+            if (newResult == "###")
+            {
+                newResult = ":Chapter"; // non-display chapter titles
+            }
+            else if (newResult.StartsWith("###"))
+            {
+                newResult = newResult.Substring(3);
+            }
+            if (newResult.Contains("</i> <i>"))
+            {
+                newResult = newResult.Replace(" </i> <i> ", " ");
+                newResult = newResult.Replace(" </i> <i>", " ");
+                newResult = newResult.Replace("</i> <i> ", " ");
+                newResult = newResult.Replace("</i> <i>", " ");
+            }
+            if (newResult.Contains("</i><i>"))
+            {
+                newResult = newResult.Replace(" </i><i> ", " ");
+                newResult = newResult.Replace("</i><i>", "");
+            }
+            if (newResult.Contains("&mdash;"))
+            {
+                newResult = newResult.Replace("&mdash;", "—");
+                while (newResult.Contains("—-"))
+                {
+                    newResult = newResult.Replace("—-", "—");
+                }
+                while (newResult.Contains("-—"))
+                {
+                    newResult = newResult.Replace("-—", "—");
+                }
+                //while (newResult.Contains("———"))
+                //{
+                //    newResult = newResult.Replace("———", "——");
+                //}
+            }
+            if (newResult.Contains("&ndash;"))
+            {
+                newResult = newResult.Replace("&ndash;", "-");
+            }
+            if (newResult.Contains("&#32;"))
+            {
+                newResult = newResult.Replace("&#32;", " ");
+            }
+            if (newResult.Contains("&#95;"))
+            {
+                newResult = newResult.Replace("&#95;", "_");
+            }
+            while (newResult.EndsWith(" ") || newResult.EndsWith("\t"))
+            {
+                newResult = newResult.Substring(0, newResult.Length - 1);
+            }
+            if (newResult.EndsWith(" </i>"))
+            {
+                newResult = newResult.Substring(0, newResult.Length - 4).TrimEnd() + "</i>";
+            }
+            while (newResult.Contains("\t "))
+            {
+                newResult = newResult.Replace("\t ", "\t");
+            }
+            return newResult;
+        }
+
+        private static string ProcessTag(string tag)
+        {
+            switch (tag)
+            {
+                case "p":
+                    return "\t";
+                case "t":
+                    return "\t";
+                case "i1":
+                    return "<i>";
+                case "i0":
+                    return "</i>";
+                case "caption1":
+                    return "<caption>";
+                case "caption0":
+                    return "</caption>";
+                case "code1":
+                    return "<code>";
+                case "code0":
+                    return "</code>";
+                case "sub1":
+                    return "<sub>";
+                case "sub0":
+                    return "</sub>";
+                case "sup1":
+                    return "<sup>";
+                case "sup0":
+                    return "</sup>";
+                case "table1":
+                    return "<table>";
+                case "table0":
+                    return "</table>";
+                case "tr1":
+                    return "<tr>";
+                case "tr0":
+                    return "</tr>";
+                case "th1":
+                    return "<th>";
+                case "th0":
+                    return "</th>";
+                case "td1":
+                    return "<td>";
+                case "td0":
+                    return "</td>";
+            }
+            if (tag.StartsWith("image:"))
+            {
+                return $"<image={tag.Substring(6)}>";
+            }
+            return ""; // remove tag
+        }
     }
 }
+
+
+//// do these after others
+//// cleanup simple issues
+//while (s.EndsWith("\t") || s.EndsWith(" "))
+//{
+//    s = s.Substring(0, s.Length - 1);
+//}
+//// check for blanklines
+//if (s == "")
+//{
+//    if (blanklines < 2) // max of 2 lines
+//    {
+//        blanklines++;
+//    }
+//}
+//else
+//{
+//    while (blanklines > 0)
+//    {
+//        result.AppendLine();
+//        blanklines--;
+//    }
+//    result.AppendLine(s);
+//}
