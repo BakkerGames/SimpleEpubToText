@@ -95,10 +95,24 @@ namespace SimpleEpubToText
             }
         }
 
-        private static bool DoConversion(string fromFolder, string toFolder, string filename)
+        private static bool DoConversion(string fromFolder, string toFolder, string inFilename)
         {
-            EbookLoader ebook = new EbookLoader(Path.Combine(fromFolder, filename));
-            string outFilename = filename.Replace(".epub", "").Replace("_nodrm", "").Replace(".", "_") + ".txt";
+            string outFilename = inFilename.Replace(".epub", "").Replace("_nodrm", "").Replace(".", "_") + ".txt";
+            string inFileFullPath = Path.Combine(fromFolder, inFilename);
+            string outFileFullPath = Path.Combine(toFolder, outFilename);
+
+            if (File.Exists(outFileFullPath))
+            {
+                // check if outfile is newer than infile
+                FileInfo inFI = new FileInfo(inFileFullPath);
+                FileInfo outFI = new FileInfo(outFileFullPath);
+                if (inFI.LastWriteTimeUtc < outFI.LastWriteTimeUtc)
+                {
+                    return false;
+                }
+            }
+
+            EbookLoader ebook = new EbookLoader(inFileFullPath);
             StringBuilder s = new StringBuilder();
             bool firstChapter = true;
             foreach (Chapter c in ebook.Chapters)
@@ -115,7 +129,6 @@ namespace SimpleEpubToText
                 }
             }
             string outFileText = ReformatEbook(s.ToString());
-            string outFileFullPath = Path.Combine(toFolder, outFilename);
             if (File.Exists(outFileFullPath))
             {
                 string oldFileText = File.ReadAllText(outFileFullPath);
