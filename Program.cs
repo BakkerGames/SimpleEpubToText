@@ -286,6 +286,14 @@ namespace SimpleEpubToText
             {
                 newResult = newResult.Substring(0, newResult.Length - 4).TrimEnd() + "</i>";
             }
+            if (newResult.Contains("<i> "))
+            {
+                newResult = newResult.Replace("<i> ", " <i>");
+            }
+            if (newResult.Contains(" </i>"))
+            {
+                newResult = newResult.Replace(" </i>", "</i> ");
+            }
             while (newResult.Contains("\t "))
             {
                 newResult = newResult.Replace("\t ", "\t");
@@ -346,28 +354,3 @@ namespace SimpleEpubToText
         }
     }
 }
-
-
-//// do these after others
-//// cleanup simple issues
-//while (s.EndsWith("\t") || s.EndsWith(" "))
-//{
-//    s = s.Substring(0, s.Length - 1);
-//}
-//// check for blanklines
-//if (s == "")
-//{
-//    if (blanklines < 2) // max of 2 lines
-//    {
-//        blanklines++;
-//    }
-//}
-//else
-//{
-//    while (blanklines > 0)
-//    {
-//        result.AppendLine();
-//        blanklines--;
-//    }
-//    result.AppendLine(s);
-//}
