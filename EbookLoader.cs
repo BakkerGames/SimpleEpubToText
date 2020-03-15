@@ -59,6 +59,7 @@ namespace SimpleEpubToText
                                                       .Split('\n');
                 foreach (string s in contentText)
                 {
+                    if (s.Length == 0) continue;
                     string s2;
                     if (s.Trim().StartsWith("<"))
                     {

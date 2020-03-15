@@ -15,6 +15,7 @@ namespace SimpleEpubToText
         {
             try
             {
+                bool forceFlag = false;
                 if (args is null || args.Count() < 2)
                 {
                     Console.WriteLine("Syntax: <from_path> <to_path>");
@@ -23,12 +24,19 @@ namespace SimpleEpubToText
                 Console.WriteLine("SimpleEpubToText: \"{0}\" to \"{1}\"", args[0], args[1]);
                 if (args.Count() >= 3)
                 {
-                    if (args[2].StartsWith("/max="))
+                    for (int i = 2; i < args.Count(); i++)
                     {
-                        maxFiles = int.Parse(args[2].Substring(5));
+                        if (args[i].StartsWith("/max="))
+                        {
+                            maxFiles = int.Parse(args[i].Substring(5));
+                        }
+                        if (args[i] == "/force")
+                        {
+                            forceFlag = true;
+                        }
                     }
                 }
-                ConvertAllEpub(args[0], args[1]);
+                ConvertAllEpub(args[0], args[1], forceFlag);
                 Console.WriteLine("\r      ");
                 Console.WriteLine($"Files changed: {changedCount}");
                 return 0;
@@ -47,7 +55,7 @@ namespace SimpleEpubToText
             }
         }
 
-        private static void ConvertAllEpub(string fromFolder, string toFolder)
+        private static void ConvertAllEpub(string fromFolder, string toFolder, bool force)
         {
             if (maxFiles == 0)
             {
@@ -64,7 +72,7 @@ namespace SimpleEpubToText
                     break;
                 }
                 foundCount++;
-                if (DoConversion(fromFolder, toFolder, Path.GetFileName(filepath)))
+                if (DoConversion(fromFolder, toFolder, Path.GetFileName(filepath), force))
                 {
                     changedCount++;
                     Console.Write("\r");
@@ -91,17 +99,17 @@ namespace SimpleEpubToText
                 {
                     continue;
                 }
-                ConvertAllEpub(Path.Combine(fromFolder, subdir), Path.Combine(toFolder, subdir));
+                ConvertAllEpub(Path.Combine(fromFolder, subdir), Path.Combine(toFolder, subdir), force);
             }
         }
 
-        private static bool DoConversion(string fromFolder, string toFolder, string inFilename)
+        private static bool DoConversion(string fromFolder, string toFolder, string inFilename, bool force)
         {
             string outFilename = inFilename.Replace(".epub", "").Replace("_nodrm", "").Replace(".", "_") + ".txt";
             string inFileFullPath = Path.Combine(fromFolder, inFilename);
             string outFileFullPath = Path.Combine(toFolder, outFilename);
 
-            if (File.Exists(outFileFullPath))
+            if (!force && File.Exists(outFileFullPath))
             {
                 // check if outfile is newer than infile
                 FileInfo inFI = new FileInfo(inFileFullPath);
@@ -129,7 +137,7 @@ namespace SimpleEpubToText
                 }
             }
             string outFileText = ReformatEbook(s.ToString());
-            if (File.Exists(outFileFullPath))
+            if (!force && File.Exists(outFileFullPath))
             {
                 string oldFileText = File.ReadAllText(outFileFullPath);
                 if (oldFileText == outFileText)
@@ -156,16 +164,14 @@ namespace SimpleEpubToText
                     {
                         blankLines++;
                     }
+                    continue;
                 }
-                else
+                while (blankLines > 0)
                 {
-                    while (blankLines > 0)
-                    {
-                        result.AppendLine();
-                        blankLines--;
-                    }
-                    result.AppendLine(s);
+                    result.AppendLine();
+                    blankLines--;
                 }
+                result.AppendLine(s);
             }
             return result.ToString();
         }
@@ -240,15 +246,19 @@ namespace SimpleEpubToText
             }
             if (newResult.Contains("</i> <i>"))
             {
-                newResult = newResult.Replace(" </i> <i> ", " ");
-                newResult = newResult.Replace(" </i> <i>", " ");
-                newResult = newResult.Replace("</i> <i> ", " ");
                 newResult = newResult.Replace("</i> <i>", " ");
             }
             if (newResult.Contains("</i><i>"))
             {
-                newResult = newResult.Replace(" </i><i> ", " ");
-                newResult = newResult.Replace("</i><i>", "");
+                newResult = newResult.Replace("</i><i>", " ");
+            }
+            if (newResult.Contains("<i> </i>"))
+            {
+                newResult = newResult.Replace("<i> </i>", " ");
+            }
+            if (newResult.Contains("<i></i>"))
+            {
+                newResult = newResult.Replace("<i></i>", " ");
             }
             if (newResult.Contains("&mdash;"))
             {
@@ -297,6 +307,14 @@ namespace SimpleEpubToText
             while (newResult.Contains("\t "))
             {
                 newResult = newResult.Replace("\t ", "\t");
+            }
+            while (newResult.Contains("  ") && !newResult.Contains("<code>"))
+            {
+                newResult = newResult.Replace("  ", " ");
+            }
+            if (newResult == "\t")
+            {
+                newResult = "";
             }
             return newResult;
         }
