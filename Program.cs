@@ -153,25 +153,26 @@ namespace SimpleEpubToText
         {
             StringBuilder result = new StringBuilder();
             string[] lines = value.Replace("\r", "").Split('\n');
-            int blankLines = 0;
+            bool blankLines = false;
             foreach (string currline in lines)
             {
                 string s = ConvertLine(currline);
                 // check for blanklines
                 if (s == "")
                 {
-                    if (blankLines < 2) // max of 2 lines
-                    {
-                        blankLines++;
-                    }
+                    blankLines = true;
                     continue;
                 }
-                while (blankLines > 0)
+                if (blankLines)
                 {
                     result.AppendLine();
-                    blankLines--;
+                    if (!s.StartsWith("\t"))
+                    {
+                        result.AppendLine();
+                    }
                 }
                 result.AppendLine(s);
+                blankLines = false;
             }
             return result.ToString();
         }
