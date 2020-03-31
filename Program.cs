@@ -179,6 +179,10 @@ namespace SimpleEpubToText
 
         private static string ConvertLine(string s)
         {
+            if (s.StartsWith("_p__image:"))
+            {
+                return "";
+            }
             StringBuilder result = new StringBuilder();
             bool inTag = false;
             bool inCode = false;
@@ -239,7 +243,8 @@ namespace SimpleEpubToText
             string newResult = result.ToString();
             if (newResult == "###")
             {
-                newResult = ":Chapter"; // non-display chapter titles
+                return "";
+                // newResult = ":Chapter"; // non-display chapter titles
             }
             else if (newResult.StartsWith("###"))
             {
