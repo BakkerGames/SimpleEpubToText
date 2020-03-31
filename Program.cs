@@ -137,6 +137,11 @@ namespace SimpleEpubToText
                 }
             }
             string outFileText = ReformatEbook(s.ToString());
+            if (string.IsNullOrEmpty(outFileText))
+            {
+                // books with only pictures (Calvin and Hobbes)
+                return false;
+            }
             if (!force && File.Exists(outFileFullPath))
             {
                 string oldFileText = File.ReadAllText(outFileFullPath);
