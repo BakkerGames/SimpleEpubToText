@@ -15,6 +15,7 @@ namespace SimpleEpubToText
         {
             try
             {
+                bool quickFlag = false;
                 bool forceFlag = false;
                 if (args is null || args.Count() < 2)
                 {
@@ -34,9 +35,13 @@ namespace SimpleEpubToText
                         {
                             forceFlag = true;
                         }
+                        if (args[i] == "/quick")
+                        {
+                            quickFlag = true;
+                        }
                     }
                 }
-                ConvertAllEpub(args[0], args[1], forceFlag);
+                ConvertAllEpub(args[0], args[1], forceFlag, quickFlag);
                 Console.WriteLine("\r      ");
                 Console.WriteLine($"Files changed: {changedCount}");
                 return 0;
@@ -55,7 +60,7 @@ namespace SimpleEpubToText
             }
         }
 
-        private static void ConvertAllEpub(string fromFolder, string toFolder, bool force)
+        private static void ConvertAllEpub(string fromFolder, string toFolder, bool forceFlag, bool quickFlag)
         {
             if (maxFiles == 0)
             {
@@ -72,7 +77,7 @@ namespace SimpleEpubToText
                     break;
                 }
                 foundCount++;
-                if (DoConversion(fromFolder, toFolder, Path.GetFileName(filepath), force))
+                if (DoConversion(fromFolder, toFolder, Path.GetFileName(filepath), forceFlag, quickFlag))
                 {
                     changedCount++;
                     Console.Write("\r");
@@ -99,17 +104,17 @@ namespace SimpleEpubToText
                 {
                     continue;
                 }
-                ConvertAllEpub(Path.Combine(fromFolder, subdir), Path.Combine(toFolder, subdir), force);
+                ConvertAllEpub(Path.Combine(fromFolder, subdir), Path.Combine(toFolder, subdir), forceFlag, quickFlag);
             }
         }
 
-        private static bool DoConversion(string fromFolder, string toFolder, string inFilename, bool force)
+        private static bool DoConversion(string fromFolder, string toFolder, string inFilename, bool forceFlag, bool quickFlag)
         {
             string outFilename = inFilename.Replace(".epub", "").Replace("_nodrm", "").Replace(".", "_") + ".txt";
             string inFileFullPath = Path.Combine(fromFolder, inFilename);
             string outFileFullPath = Path.Combine(toFolder, outFilename);
 
-            if (!force && File.Exists(outFileFullPath))
+            if (File.Exists(outFileFullPath) && quickFlag)
             {
                 // check if outfile is newer than infile
                 FileInfo inFI = new FileInfo(inFileFullPath);
@@ -142,7 +147,7 @@ namespace SimpleEpubToText
                 // books with only pictures (Calvin and Hobbes)
                 return false;
             }
-            if (!force && File.Exists(outFileFullPath))
+            if (File.Exists(outFileFullPath) && !forceFlag)
             {
                 string oldFileText = File.ReadAllText(outFileFullPath);
                 if (oldFileText == outFileText)
@@ -255,6 +260,10 @@ namespace SimpleEpubToText
             {
                 newResult = newResult.Substring(3);
             }
+            if (newResult.Contains("<code> </code>"))
+            {
+                newResult = newResult.Replace("<code> </code>", " ");
+            }
             if (newResult.Contains("</i> <i>"))
             {
                 newResult = newResult.Replace("</i> <i>", " ");
@@ -322,6 +331,14 @@ namespace SimpleEpubToText
             while (newResult.Contains("  ") && !newResult.Contains("<code>"))
             {
                 newResult = newResult.Replace("  ", " ");
+            }
+            if (newResult.Contains(" <i> "))
+            {
+                newResult = newResult.Replace(" <i> ", " <i>");
+            }
+            if (newResult.Contains(" </i> "))
+            {
+                newResult = newResult.Replace(" </i> ", "</i> ");
             }
             if (newResult == "\t")
             {
