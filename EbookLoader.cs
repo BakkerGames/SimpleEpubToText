@@ -51,7 +51,7 @@ namespace SimpleEpubToText
                 string[] contentText = contentFiles[i].Content
                                                       .Replace("\r", "")
                                                       .Replace("</span>\n<span", "</span> <span")
-                                                      .Replace("\n", "")
+                                                      .Replace("\n", " ") // fixes paragraphs across multiple lines
                                                       .Replace(">", ">\n")
                                                       .Replace("<", "\n<")
                                                       .Replace((char)160, ' ')
