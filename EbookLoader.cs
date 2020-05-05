@@ -598,13 +598,27 @@ namespace SimpleEpubToText
                     case '>':
                         result.Append("&gt;");
                         break;
-                    case '“':
-                    case '”':
+                    case (char)132:
+                    case (char)147:
+                    case (char)148:
+                    case (char)171:
+                    case (char)187:
+                    case (char)8220:
+                    case (char)8221:
                         result.Append("\"");
                         break;
-                    case '‘':
-                    case '’':
-                    case '`':
+                    case (char)96:
+                    case (char)130:
+                    case (char)139:
+                    case (char)145:
+                    case (char)146:
+                    case (char)155:
+                    case (char)8216:
+                    case (char)8217:
+                    case (char)8218:
+                    case (char)8219:
+                    case (char)8249:
+                    case (char)8250:
                         result.Append("'");
                         break;
                     case '\t':
@@ -617,15 +631,13 @@ namespace SimpleEpubToText
                     case (char)8204: // zero width non-joiner
                     case (char)8205: // zero width joiner
                         break;
-                    case (char)194: // non-breaking space
-                        result.Append('.');
-                        break;
                     case (char)8211:
                         result.Append("&ndash;");
                         break;
                     case (char)8212:
                         result.Append("&mdash;");
                         break;
+                    case (char)133:
                     case (char)8230:
                         result.Append("...");
                         break;

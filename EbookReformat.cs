@@ -7,11 +7,11 @@ namespace SimpleEpubToText
         public static string ReformatEbook(string value)
         {
             StringBuilder result = new StringBuilder();
-            string[] lines = value.Replace("\r", "").Split('\n');
+            string[] lines = value.Replace("\r", "").Replace("<br/>", "\n\t").Split('\n');
             bool blankLines = false;
             foreach (string currline in lines)
             {
-                string s = ConvertLine(currline);
+                string s = ConvertLine(ExpandHexChars(currline));
                 // check for blanklines
                 if (s == "")
                 {
@@ -39,7 +39,7 @@ namespace SimpleEpubToText
                 int pos0 = s.IndexOf("_image:");
                 int pos1 = s.IndexOf("_", pos0 + 1);
                 s = s.Substring(0, pos0) + "[image]" + s.Substring(pos1 + 1);
-                if (s.Replace ("_p_", "").Replace("_t_", "").Replace("[image]","") == "")
+                if (s.Replace("_p_", "").Replace("_t_", "").Replace("[image]", "") == "")
                 {
                     return "";
                 }
@@ -135,33 +135,33 @@ namespace SimpleEpubToText
             {
                 newResult = newResult.Replace("<i></i>", " ");
             }
+            if (newResult.Contains(". ..."))
+            {
+                newResult = newResult.Replace(". ...", "....");
+            }
+            if (newResult.Contains("... ."))
+            {
+                newResult = newResult.Replace("... .", "....");
+            }
             if (newResult.Contains("&mdash;"))
             {
                 newResult = newResult.Replace("&mdash;", "—");
-                while (newResult.Contains("—-"))
-                {
-                    newResult = newResult.Replace("—-", "—");
-                }
-                while (newResult.Contains("-—"))
-                {
-                    newResult = newResult.Replace("-—", "—");
-                }
-                //while (newResult.Contains("———"))
-                //{
-                //    newResult = newResult.Replace("———", "——");
-                //}
             }
             if (newResult.Contains("&ndash;"))
             {
                 newResult = newResult.Replace("&ndash;", "-");
             }
-            if (newResult.Contains("&#32;"))
+            while (newResult.Contains("—-"))
             {
-                newResult = newResult.Replace("&#32;", " ");
+                newResult = newResult.Replace("—-", "—");
             }
-            if (newResult.Contains("&#95;"))
+            while (newResult.Contains("-—"))
             {
-                newResult = newResult.Replace("&#95;", "_");
+                newResult = newResult.Replace("-—", "—");
+            }
+            if (newResult.Contains("—"))
+            {
+                newResult = newResult.Replace("—", " — ");
             }
             while (newResult.EndsWith(" ") || newResult.EndsWith("\t"))
             {
@@ -252,6 +252,90 @@ namespace SimpleEpubToText
                 return $"<image={tag.Substring(6)}>";
             }
             return ""; // remove tag
+        }
+
+        private static string ExpandHexChars(string s)
+        {
+            if (!s.Contains("&#")) return s;
+            StringBuilder result = new StringBuilder();
+            int posStart = -1;
+            int posEnd = -1;
+            while (s.IndexOf("&#", posEnd + 1) > 0)
+            {
+                posStart = s.IndexOf("&#", posEnd + 1);
+                result.Append(s.Substring(posEnd + 1, posStart - posEnd - 1));
+                posEnd = s.IndexOf(";", posStart);
+                if (s[posStart + 2] == 'x')
+                {
+                    posStart++;
+                }
+                int charValue = 0;
+                for (int i = posStart + 2; i < posEnd; i++)
+                {
+                    int value = s.Substring(i, 1).ToUpper()[0];
+                    if (value > '9')
+                    {
+                        value = value - 'A' + 10;
+                    }
+                    else
+                    {
+                        value -= '0';
+                    }
+                    charValue = (charValue * 16) + value;
+                }
+                // adjust some chars to simpler ones
+                switch (charValue)
+                {
+                    case 133: // ellipsis
+                    case 8230:
+                        result.Append("...");
+                        charValue = 0;
+                        break;
+                    case 160: // non-breaking space
+                    case 8201: // thin space
+                    case 8202: // hair space
+                        charValue = 32; // space
+                        break;
+                    case 173: // soft hyphen
+                        charValue = 0;
+                        break;
+                    case 8203: // zero width space
+                    case 8204: // zero width non-joiner
+                    case 8205: // zero width joiner
+                        charValue = 0;
+                        break;
+                    case 132:
+                    case 147:
+                    case 148:
+                    case 171:
+                    case 187:
+                    case 8220:
+                    case 8221:
+                        charValue = 34;
+                        break;
+                    case 96:
+                    case 130:
+                    case 139:
+                    case 145:
+                    case 146:
+                    case 155:
+                    case 8216:
+                    case 8217:
+                    case 8218:
+                    case 8219:
+                    case 8249:
+                    case 8250:
+                        charValue = 39;
+                        break;
+                }
+                // add the character
+                if (charValue != 0)
+                {
+                    result.Append((char)charValue);
+                }
+            }
+            result.Append(s.Substring(posEnd + 1));
+            return result.ToString();
         }
     }
 }
