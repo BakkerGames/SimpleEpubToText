@@ -176,6 +176,8 @@ namespace SimpleEpubToText
                         case "/h2":
                         case "/h3":
                         case "/h4":
+                        case "/h5":
+                        case "/h6":
                             if (inTable)
                             {
                                 continue;
@@ -484,11 +486,15 @@ namespace SimpleEpubToText
                         case "h2":
                         case "h3":
                         case "h4":
+                        case "h5":
+                        case "h6":
                         case "col":
                         case "colgroup":
                         case "/colgroup":
                         case "section":
                         case "/section":
+                        case "big":
+                        case "/big":
                             // ignore all these
                             break;
                         case "p":
