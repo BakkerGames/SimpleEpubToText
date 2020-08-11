@@ -39,7 +39,7 @@ namespace SimpleEpubToText
                 int pos0 = s.IndexOf("_image:");
                 int pos1 = s.IndexOf("_", pos0 + 1);
                 s = s.Substring(0, pos0) + "[image]" + s.Substring(pos1 + 1);
-                if (s.Replace("_p_", "").Replace("_t_", "").Replace("[image]", "") == "")
+                if (s.Replace("_p_", "").Replace("_t_", "").Replace("[image]", "").Replace(" ", "") == "")
                 {
                     return "";
                 }
