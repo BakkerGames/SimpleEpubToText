@@ -265,6 +265,14 @@ namespace SimpleEpubToText
                                 currline.Append("_image:");
                                 currline.Append(imageFile);
                                 currline.Append("_");
+                                if (s2.IndexOf("alt=\"") >= 0)
+                                {
+                                    string altTag = s2.Substring(s2.IndexOf("alt=\"") + 5);
+                                    altTag = altTag.Substring(0, altTag.IndexOf("\""));
+                                    currline.Append("_imagealt:");
+                                    currline.Append(altTag);
+                                    currline.Append("_");
+                                }
                             }
                             break;
                         case "span":

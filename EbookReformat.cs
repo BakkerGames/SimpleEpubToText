@@ -44,6 +44,13 @@ namespace SimpleEpubToText
                     return "";
                 }
             }
+            while (s.Contains("_imagealt:"))
+            {
+                int pos0 = s.IndexOf("_imagealt:");
+                int pos1 = s.IndexOf("_", pos0 + 1);
+                s = s.Substring(0, pos0) + "[" + s.Substring(pos0 + 10, pos1 - pos0 - 10) + "]" + s.Substring(pos1 + 1);
+                s = s.Replace("[image]", ""); // don't need [image] now
+            }
             if (s.StartsWith("###") && s.Contains("[image]"))
             {
                 s = s.Replace("[image]", "").TrimEnd();
