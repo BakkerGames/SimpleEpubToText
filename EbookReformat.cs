@@ -41,7 +41,7 @@ namespace SimpleEpubToText
                 s = s.Substring(0, pos0) + "[image]" + s.Substring(pos1 + 1);
                 if (s.Replace("_p_", "").Replace("_t_", "").Replace("[image]", "").Replace(" ", "") == "")
                 {
-                    return "";
+                    //return "";
                 }
             }
             while (s.Contains("_imagealt:"))
@@ -53,7 +53,7 @@ namespace SimpleEpubToText
             }
             if (s.StartsWith("###") && s.Contains("[image]"))
             {
-                s = s.Replace("[image]", "").TrimEnd();
+                //s = s.Replace("[image]", "").TrimEnd();
             }
             StringBuilder result = new StringBuilder();
             bool inTag = false;

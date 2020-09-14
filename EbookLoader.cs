@@ -54,6 +54,8 @@ namespace SimpleEpubToText
                                                       .Replace("\n", " ") // fixes paragraphs across multiple lines
                                                       .Replace(">", ">\n")
                                                       .Replace("<", "\n<")
+                                                      .Replace("&nbsp;", " ")
+                                                      .Replace("&#160;", " ")
                                                       .Replace((char)160, ' ')
                                                       .Replace("_", "&#95;") // underline
                                                       .Split('\n');
@@ -268,10 +270,13 @@ namespace SimpleEpubToText
                                 if (s2.IndexOf("alt=\"") >= 0)
                                 {
                                     string altTag = s2.Substring(s2.IndexOf("alt=\"") + 5);
-                                    altTag = altTag.Substring(0, altTag.IndexOf("\""));
-                                    currline.Append("_imagealt:");
-                                    currline.Append(altTag);
-                                    currline.Append("_");
+                                    altTag = altTag.Substring(0, altTag.IndexOf("\"")).Trim();
+                                    if (altTag.Length > 0)
+                                    {
+                                        currline.Append("_imagealt:");
+                                        currline.Append(altTag);
+                                        currline.Append("_");
+                                    }
                                 }
                             }
                             break;
@@ -503,6 +508,8 @@ namespace SimpleEpubToText
                         case "/section":
                         case "big":
                         case "/big":
+                        case "nav":
+                        case "/nav":
                             // ignore all these
                             break;
                         case "p":
