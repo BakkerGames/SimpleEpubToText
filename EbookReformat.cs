@@ -206,6 +206,15 @@ namespace SimpleEpubToText
             {
                 newResult = "";
             }
+            // these two must be the very last checks
+            if (newResult.Contains("&#95;"))
+            {
+                newResult = newResult.Replace("&#95;", "_");
+            }
+            if (newResult.Contains("&amp;"))
+            {
+                newResult = newResult.Replace("&amp;", "&");
+            }
             return newResult;
         }
 
@@ -267,6 +276,7 @@ namespace SimpleEpubToText
             StringBuilder result = new StringBuilder();
             int posStart = -1;
             int posEnd = -1;
+            int baseValue = 10;
             while (s.IndexOf("&#", posEnd + 1) > 0)
             {
                 posStart = s.IndexOf("&#", posEnd + 1);
@@ -275,6 +285,11 @@ namespace SimpleEpubToText
                 if (s[posStart + 2] == 'x')
                 {
                     posStart++;
+                    baseValue = 16;
+                }
+                else
+                {
+                    baseValue = 10;
                 }
                 int charValue = 0;
                 for (int i = posStart + 2; i < posEnd; i++)
@@ -282,13 +297,17 @@ namespace SimpleEpubToText
                     int value = s.Substring(i, 1).ToUpper()[0];
                     if (value > '9')
                     {
+                        if (baseValue == 10)
+                        {
+                            throw new System.Exception($"Invalid hex format: {s}");
+                        }
                         value = value - 'A' + 10;
                     }
                     else
                     {
                         value -= '0';
                     }
-                    charValue = (charValue * 16) + value;
+                    charValue = (charValue * baseValue) + value;
                 }
                 // adjust some chars to simpler ones
                 switch (charValue)
@@ -338,7 +357,10 @@ namespace SimpleEpubToText
                 // add the character
                 if (charValue != 0)
                 {
-                    result.Append((char)charValue);
+                    if (charValue == 95)
+                        result.Append("&#95;");
+                    else
+                        result.Append((char)charValue);
                 }
             }
             result.Append(s.Substring(posEnd + 1));

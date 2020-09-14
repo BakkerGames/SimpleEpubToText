@@ -54,10 +54,6 @@ namespace SimpleEpubToText
                                                       .Replace("\n", " ") // fixes paragraphs across multiple lines
                                                       .Replace(">", ">\n")
                                                       .Replace("<", "\n<")
-                                                      .Replace("&nbsp;", " ")
-                                                      .Replace("&#160;", " ")
-                                                      .Replace((char)160, ' ')
-                                                      .Replace("_", "&#95;") // underline
                                                       .Split('\n');
                 foreach (string s in contentText)
                 {
@@ -71,7 +67,23 @@ namespace SimpleEpubToText
                     {
                         s2 = s;
                     }
+                    if (s2.Contains("&nbsp;"))
+                    {
+                        s2 = s2.Replace("&nbsp;", " ").Trim();
+                    }
+                    if (s2.Contains("&#160;"))
+                    {
+                        s2 = s2.Replace("&#160;", " ").Trim();
+                    }
+                    if (s2.Contains($"{(char)160}"))
+                    {
+                        s2 = s2.Replace((char)160, ' ').Trim();
+                    }
                     if (s2.Length == 0) continue;
+                    if (s2.Contains("_"))
+                    {
+                        s2 = s2.Replace("_", "&#95;");
+                    }
                     if (inComment)
                     {
                         if (s2.Contains("-->"))
@@ -610,9 +622,9 @@ namespace SimpleEpubToText
             {
                 switch (c)
                 {
-                    case '_':
-                        result.Append("&#95;"); // underline
-                        break;
+                    //case '_':
+                    //    result.Append("&#95;"); // underline
+                    //    break;
                     case '<':
                         result.Append("&lt;");
                         break;
@@ -702,6 +714,7 @@ namespace SimpleEpubToText
         }
 
         #endregion
+
     }
 
     public class Chapter
