@@ -69,17 +69,17 @@ namespace SimpleEpubToText
                     }
                     if (s2.Contains("&nbsp;"))
                     {
-                        s2 = s2.Replace("&nbsp;", " ").Trim();
+                        s2 = s2.Replace("&nbsp;", " ");
                     }
                     if (s2.Contains("&#160;"))
                     {
-                        s2 = s2.Replace("&#160;", " ").Trim();
+                        s2 = s2.Replace("&#160;", " ");
                     }
                     if (s2.Contains($"{(char)160}"))
                     {
-                        s2 = s2.Replace((char)160, ' ').Trim();
+                        s2 = s2.Replace((char)160, ' ');
                     }
-                    if (s2.Length == 0) continue;
+                    if (s2.Trim().Length == 0) continue;
                     if (s2.Contains("_"))
                     {
                         s2 = s2.Replace("_", "&#95;");
