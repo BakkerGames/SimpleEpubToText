@@ -79,7 +79,7 @@ namespace SimpleEpubToText
                     {
                         s2 = s2.Replace((char)160, ' ');
                     }
-                    if (s2.Trim().Length == 0) continue;
+                    if (s2.Length == 0) continue;
                     if (s2.Contains("_"))
                     {
                         s2 = s2.Replace("_", "&#95;");
