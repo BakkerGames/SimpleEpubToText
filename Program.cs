@@ -125,7 +125,18 @@ namespace SimpleEpubToText
                 }
             }
 
-            EbookLoader ebook = new EbookLoader(inFileFullPath);
+            EbookLoader ebook;
+            try
+            {
+                ebook = new EbookLoader(inFileFullPath);
+            }
+            catch (Exception)
+            {
+                // cannot load ebook
+                Console.WriteLine($"\rError: {inFilename}");
+                return false;
+            }
+
             StringBuilder s = new StringBuilder();
             bool firstChapter = true;
             foreach (Chapter c in ebook.Chapters)
