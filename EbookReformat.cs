@@ -168,7 +168,8 @@ namespace SimpleEpubToText
             }
             if (newResult.Contains("—"))
             {
-                newResult = newResult.Replace("—", " — ");
+                // don't add spaces anymore
+                //newResult = newResult.Replace("—", " — ");
             }
             while (newResult.EndsWith(" ") || newResult.EndsWith("\t"))
             {

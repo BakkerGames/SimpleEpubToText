@@ -522,6 +522,8 @@ namespace SimpleEpubToText
                         case "/big":
                         case "nav":
                         case "/nav":
+                        case "wbr":
+                        case "wbr/":
                             // ignore all these
                             break;
                         case "p":
