@@ -9,23 +9,20 @@ namespace SimpleEpubToText
     {
         private static int foundCount = 0;
         private static int changedCount = 0;
+        private static int errorCount = 0;
         private static int maxFiles = -1; // all
 
         static int Main(string[] args)
         {
             try
             {
+                string fromPath = null;
+                string toPath = null;
                 bool quickFlag = false;
                 bool forceFlag = false;
-                if (args is null || args.Count() < 2)
+                for (int i = 0; i < args.Count(); i++)
                 {
-                    Console.WriteLine("Syntax: <from_path> <to_path>");
-                    return 1;
-                }
-                Console.WriteLine("SimpleEpubToText: \"{0}\" to \"{1}\"", args[0], args[1]);
-                if (args.Count() >= 3)
-                {
-                    for (int i = 2; i < args.Count(); i++)
+                    if (args[i].StartsWith("/"))
                     {
                         if (args[i].StartsWith("/max="))
                         {
@@ -40,10 +37,38 @@ namespace SimpleEpubToText
                             quickFlag = true;
                         }
                     }
+                    else if (fromPath == null)
+                    {
+                        fromPath = args[i];
+                    }
+                    else if (toPath == null)
+                    {
+                        toPath = args[i];
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Unknown argument {args[i]}");
+                        return 1;
+                    }
                 }
-                ConvertAllEpub(args[0], args[1], forceFlag, quickFlag);
+                if (fromPath == null)
+                {
+                    Console.WriteLine("From path not specified");
+                    return 1;
+                }
+                if (toPath == null)
+                {
+                    toPath = fromPath;
+                }
+                Console.WriteLine($"SimpleEpubToText: \"{fromPath}\" to \"{toPath}\"");
+                ConvertAllEpub(fromPath, toPath, forceFlag, quickFlag);
                 Console.WriteLine("\r      ");
+                Console.WriteLine($"Files found:   {foundCount}");
                 Console.WriteLine($"Files changed: {changedCount}");
+                if (errorCount > 0)
+                {
+                    Console.WriteLine($"Errors:        {errorCount}");
+                }
                 return 0;
             }
             catch (Exception e)
@@ -72,25 +97,33 @@ namespace SimpleEpubToText
             }
             foreach (string filepath in Directory.EnumerateFiles(fromFolder, "*.epub", SearchOption.TopDirectoryOnly))
             {
-                if (maxFiles == 0)
+                try
                 {
-                    break;
+                    if (maxFiles == 0)
+                    {
+                        break;
+                    }
+                    foundCount++;
+                    if (DoConversion(fromFolder, toFolder, Path.GetFileName(filepath), forceFlag, quickFlag))
+                    {
+                        changedCount++;
+                        Console.Write("\r");
+                        Console.Write(Path.GetFileName(filepath).Replace("_nodrm", ""));
+                        Console.WriteLine();
+                    }
+                    else
+                    {
+                        Console.Write($"\r{foundCount}");
+                    }
+                    if (maxFiles > 0)
+                    {
+                        maxFiles--;
+                    }
                 }
-                foundCount++;
-                if (DoConversion(fromFolder, toFolder, Path.GetFileName(filepath), forceFlag, quickFlag))
+                catch (Exception ex)
                 {
-                    changedCount++;
-                    Console.Write("\r");
-                    Console.Write(Path.GetFileName(filepath).Replace("_nodrm", ""));
-                    Console.WriteLine();
-                }
-                else
-                {
-                    Console.Write($"\r{foundCount}");
-                }
-                if (maxFiles > 0)
-                {
-                    maxFiles--;
+                    Console.WriteLine($"\rError converting \"{filepath}\"\r\n- {ex.Message}");
+                    errorCount++;
                 }
             }
             foreach (string ds in Directory.EnumerateDirectories(fromFolder))
