@@ -20,6 +20,7 @@ namespace SimpleEpubToText
                 string toPath = null;
                 bool quickFlag = false;
                 bool forceFlag = false;
+                bool bareFormat = false;
                 for (int i = 0; i < args.Count(); i++)
                 {
                     if (args[i].StartsWith("/"))
@@ -35,6 +36,10 @@ namespace SimpleEpubToText
                         if (args[i] == "/quick")
                         {
                             quickFlag = true;
+                        }
+                        if (args[i] == "/bare")
+                        {
+                            bareFormat = true;
                         }
                     }
                     else if (fromPath == null)
@@ -61,7 +66,7 @@ namespace SimpleEpubToText
                     toPath = fromPath;
                 }
                 Console.WriteLine($"SimpleEpubToText: \"{fromPath}\" to \"{toPath}\"");
-                ConvertAllEpub(fromPath, toPath, forceFlag, quickFlag);
+                ConvertAllEpub(fromPath, toPath, forceFlag, quickFlag, bareFormat);
                 Console.WriteLine("\r      ");
                 Console.WriteLine($"Files found:   {foundCount}");
                 Console.WriteLine($"Files changed: {changedCount}");
@@ -69,6 +74,8 @@ namespace SimpleEpubToText
                 {
                     Console.WriteLine($"Errors:        {errorCount}");
                 }
+                Console.Write("\r\nPress any key to continue...");
+                Console.Read();
                 return 0;
             }
             catch (Exception e)
@@ -85,7 +92,7 @@ namespace SimpleEpubToText
             }
         }
 
-        private static void ConvertAllEpub(string fromFolder, string toFolder, bool forceFlag, bool quickFlag)
+        private static void ConvertAllEpub(string fromFolder, string toFolder, bool forceFlag, bool quickFlag, bool bareFormat)
         {
             if (maxFiles == 0)
             {
@@ -104,7 +111,7 @@ namespace SimpleEpubToText
                         break;
                     }
                     foundCount++;
-                    if (DoConversion(fromFolder, toFolder, Path.GetFileName(filepath), forceFlag, quickFlag))
+                    if (DoConversion(fromFolder, toFolder, Path.GetFileName(filepath), forceFlag, quickFlag, bareFormat))
                     {
                         changedCount++;
                         Console.Write("\r");
@@ -137,13 +144,13 @@ namespace SimpleEpubToText
                 {
                     continue;
                 }
-                ConvertAllEpub(Path.Combine(fromFolder, subdir), Path.Combine(toFolder, subdir), forceFlag, quickFlag);
+                ConvertAllEpub(Path.Combine(fromFolder, subdir), Path.Combine(toFolder, subdir), forceFlag, quickFlag, bareFormat);
             }
         }
 
-        private static bool DoConversion(string fromFolder, string toFolder, string inFilename, bool forceFlag, bool quickFlag)
+        private static bool DoConversion(string fromFolder, string toFolder, string inFilename, bool forceFlag, bool quickFlag, bool bareFormat)
         {
-            string outFilename = inFilename.Replace(".epub", "").Replace("_nodrm", "").Replace(".", "_") + ".txt";
+            string outFilename = inFilename.Replace(".epub", "").Replace("_nodrm", "") + ".txt";
             string inFileFullPath = Path.Combine(fromFolder, inFilename);
             string outFileFullPath = Path.Combine(toFolder, outFilename);
 
@@ -185,7 +192,7 @@ namespace SimpleEpubToText
                     s.AppendLine(p);
                 }
             }
-            string outFileText = EbookReformat.ReformatEbook(s.ToString());
+            string outFileText = EbookReformat.ReformatEbook(s.ToString(), bareFormat);
             if (string.IsNullOrEmpty(outFileText))
             {
                 // books with only pictures (Calvin and Hobbes)

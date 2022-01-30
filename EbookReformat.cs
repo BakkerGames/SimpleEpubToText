@@ -4,7 +4,7 @@ namespace SimpleEpubToText
 {
     public class EbookReformat
     {
-        public static string ReformatEbook(string value)
+        public static string ReformatEbook(string value, bool bareFormat)
         {
             StringBuilder result = new StringBuilder();
             string[] lines = value.Replace("\r", "").Replace("<br/>", "\n\t").Split('\n');
@@ -25,6 +25,10 @@ namespace SimpleEpubToText
                     {
                         result.AppendLine();
                     }
+                }
+                if (bareFormat)
+                {
+                    s = ConvertToBareFormat(s);
                 }
                 result.AppendLine(s);
                 blankLines = false;
@@ -366,6 +370,55 @@ namespace SimpleEpubToText
             }
             result.Append(s.Substring(posEnd + 1));
             return result.ToString();
+        }
+
+        private static string ConvertToBareFormat(string s)
+        {
+            if (s.Contains("<i>"))
+            {
+                s = s.Replace("<i>", "_");
+            }
+            if (s.Contains("</i>"))
+            {
+                s = s.Replace("</i>", "_");
+            }
+            if (s.Contains("<b>"))
+            {
+                s = s.Replace("<b>", "*");
+            }
+            if (s.Contains("</b>"))
+            {
+                s = s.Replace("</b>", "*");
+            }
+            if (s.Contains("<code>"))
+            {
+                s = s.Replace("<code>", "```");
+            }
+            if (s.Contains("</code>"))
+            {
+                s = s.Replace("</code>", "```");
+            }
+            if (s.Contains("<sup>"))
+            {
+                s = s.Replace("<sup>", "[");
+            }
+            if (s.Contains("</sup>"))
+            {
+                s = s.Replace("</sup>", "]");
+            }
+            if (s.Contains("—"))
+            {
+                s = s.Replace("—", "---");
+            }
+            int pos1 = s.IndexOf("<");
+            int pos2 = s.IndexOf(">");
+            while (pos1 >= 0 && pos2 > pos1)
+            {
+                s = s.Substring(0, pos1) + s.Substring(pos2 + 1);
+                pos1 = s.IndexOf("<");
+                pos2 = s.IndexOf(">");
+            }
+            return s;
         }
     }
 }
