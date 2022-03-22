@@ -428,9 +428,11 @@ namespace SimpleEpubToText
                             currline.Clear();
                             break;
                         case "tt":
+                        case "code":
                             currline.Append("_code1_");
                             break;
                         case "/tt":
+                        case "/code":
                             currline.Append("_code0_");
                             break;
                         case "em":
