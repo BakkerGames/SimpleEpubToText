@@ -396,7 +396,11 @@ namespace SimpleEpubToText
             }
             if (s.Contains("</code>"))
             {
-                s = s.Replace("</code>", "");
+                if (s.EndsWith("</code>"))
+                {
+                    s = s.Substring(0, s.Length - 7); // remove trailing </code>
+                }
+                s = s.Replace("</code>", "```");
             }
             if (s.Contains("<sup>"))
             {
