@@ -1,184 +1,183 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 
-namespace SimpleEpubToText
+namespace SimpleEpubToText;
+
+class Program
 {
-    class Program
-    {
-        private static int foundCount = 0;
-        private static int changedCount = 0;
-        private static int errorCount = 0;
-        private static int maxFiles = -1; // all
+    private static int foundCount = 0;
+    private static int changedCount = 0;
+    private static int errorCount = 0;
+    private static int maxFiles = -1; // all
 
-        static int Main(string[] args)
+    static int Main(string[] args)
+    {
+        try
         {
-            try
+            string? fromPath = null;
+            string? toPath = null;
+            bool quickFlag = false;
+            bool forceFlag = false;
+            bool bareFormat = false;
+            for (int i = 0; i < args.Length; i++)
             {
-                string fromPath = null;
-                string toPath = null;
-                bool quickFlag = false;
-                bool forceFlag = false;
-                bool bareFormat = false;
-                for (int i = 0; i < args.Count(); i++)
+                if (args[i].StartsWith("/") || args[i].StartsWith("--"))
                 {
-                    if (args[i].StartsWith("/"))
+                    if (args[i].StartsWith("/max=") || args[i].StartsWith("--max="))
                     {
-                        if (args[i].StartsWith("/max="))
-                        {
-                            maxFiles = int.Parse(args[i].Substring(5));
-                        }
-                        if (args[i] == "/force")
-                        {
-                            forceFlag = true;
-                        }
-                        if (args[i] == "/quick")
-                        {
-                            quickFlag = true;
-                        }
-                        if (args[i] == "/bare")
-                        {
-                            bareFormat = true;
-                        }
+                        maxFiles = int.Parse(args[i][(args[i].IndexOf('=') + 1)..]);
                     }
-                    else if (fromPath == null)
+                    if (args[i] == "/force" || args[i] == "--force")
                     {
-                        fromPath = args[i];
+                        forceFlag = true;
                     }
-                    else if (toPath == null)
+                    if (args[i] == "/quick" || args[i] == "--quick")
                     {
-                        toPath = args[i];
+                        quickFlag = true;
                     }
-                    else
+                    if (args[i] == "/bare" || args[i] == "--bare")
                     {
-                        Console.WriteLine($"Unknown argument {args[i]}");
-                        return 1;
+                        bareFormat = true;
                     }
                 }
-                if (fromPath == null)
+                else if (fromPath == null)
                 {
-                    Console.WriteLine("From path not specified");
+                    fromPath = args[i];
+                }
+                else if (toPath == null)
+                {
+                    toPath = args[i];
+                }
+                else
+                {
+                    Console.WriteLine($"Unknown argument {args[i]}");
                     return 1;
                 }
-                if (toPath == null)
-                {
-                    toPath = fromPath;
-                }
-                Console.WriteLine($"SimpleEpubToText: \"{fromPath}\" to \"{toPath}\"");
-                ConvertAllEpub(fromPath, toPath, forceFlag, quickFlag, bareFormat);
-                Console.WriteLine("\r      ");
-                Console.WriteLine($"Files found:   {foundCount}");
-                Console.WriteLine($"Files changed: {changedCount}");
-                if (errorCount > 0)
-                {
-                    Console.WriteLine($"Errors:        {errorCount}");
-                }
-                Console.Write("\r\nPress any key to continue...");
-                Console.Read();
-                return 0;
             }
-            catch (Exception e)
+            if (fromPath == null)
             {
-                Console.WriteLine(e.Message);
-                return 2;
+                Console.WriteLine("From path not specified");
+                return 1;
             }
-            finally
+            if (toPath == null)
             {
-#if DEBUG
-                Console.Write("Press enter to continue...");
-                Console.ReadLine();
-#endif
+                toPath = fromPath;
             }
+            Console.WriteLine($"SimpleEpubToText: \"{fromPath}\" to \"{toPath}\"");
+            ConvertAllEpub(fromPath, toPath, forceFlag, quickFlag, bareFormat);
+            Console.WriteLine("\r      ");
+            Console.WriteLine($"Files found:   {foundCount}");
+            Console.WriteLine($"Files changed: {changedCount}");
+            if (errorCount > 0)
+            {
+                Console.WriteLine($"Errors:        {errorCount}");
+            }
+            Console.Write("\r\nPress any key to continue...");
+            Console.Read();
+            return 0;
         }
-
-        private static void ConvertAllEpub(string fromFolder, string toFolder, bool forceFlag, bool quickFlag, bool bareFormat)
+        catch (Exception e)
         {
-            if (maxFiles == 0)
-            {
-                return;
-            }
-            if (!Directory.Exists(toFolder))
-            {
-                Directory.CreateDirectory(toFolder);
-            }
-            foreach (string filepath in Directory.EnumerateFiles(fromFolder, "*.epub", SearchOption.TopDirectoryOnly))
-            {
-                try
-                {
-                    if (maxFiles == 0)
-                    {
-                        break;
-                    }
-                    foundCount++;
-                    if (DoConversion(fromFolder, toFolder, Path.GetFileName(filepath), forceFlag, quickFlag, bareFormat))
-                    {
-                        changedCount++;
-                        Console.Write("\r");
-                        Console.Write(Path.GetFileName(filepath).Replace("_nodrm", ""));
-                        Console.WriteLine();
-                    }
-                    else
-                    {
-                        Console.Write($"\r{foundCount}");
-                    }
-                    if (maxFiles > 0)
-                    {
-                        maxFiles--;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"\rError converting \"{filepath}\"\r\n- {ex.Message}");
-                    errorCount++;
-                }
-            }
-            foreach (string ds in Directory.EnumerateDirectories(fromFolder))
+            Console.WriteLine(e.Message);
+            return 2;
+        }
+        finally
+        {
+#if DEBUG
+            Console.Write("Press enter to continue...");
+            Console.ReadLine();
+#endif
+        }
+    }
+
+    private static void ConvertAllEpub(string fromFolder, string toFolder, bool forceFlag, bool quickFlag, bool bareFormat)
+    {
+        if (maxFiles == 0)
+        {
+            return;
+        }
+        if (!Directory.Exists(toFolder))
+        {
+            Directory.CreateDirectory(toFolder);
+        }
+        foreach (string filepath in Directory.EnumerateFiles(fromFolder, "*.epub", SearchOption.TopDirectoryOnly))
+        {
+            try
             {
                 if (maxFiles == 0)
                 {
                     break;
                 }
-                string subdir = Path.GetFileName(ds);
-                if (subdir.StartsWith("."))
+                foundCount++;
+                if (DoConversion(fromFolder, toFolder, Path.GetFileName(filepath), forceFlag, quickFlag, bareFormat))
                 {
-                    continue;
+                    changedCount++;
+                    Console.Write("\r");
+                    Console.Write(Path.GetFileName(filepath).Replace("_nodrm", ""));
+                    Console.WriteLine();
                 }
-                ConvertAllEpub(Path.Combine(fromFolder, subdir), Path.Combine(toFolder, subdir), forceFlag, quickFlag, bareFormat);
+                else
+                {
+                    Console.Write($"\r{foundCount}");
+                }
+                if (maxFiles > 0)
+                {
+                    maxFiles--;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"\rError converting \"{filepath}\"\r\n- {ex.Message}");
+                errorCount++;
+            }
+        }
+        foreach (string ds in Directory.EnumerateDirectories(fromFolder))
+        {
+            if (maxFiles == 0)
+            {
+                break;
+            }
+            string subdir = Path.GetFileName(ds);
+            if (subdir.StartsWith("."))
+            {
+                continue;
+            }
+            ConvertAllEpub(Path.Combine(fromFolder, subdir), Path.Combine(toFolder, subdir), forceFlag, quickFlag, bareFormat);
+        }
+    }
+
+    private static bool DoConversion(string fromFolder, string toFolder, string inFilename, bool forceFlag, bool quickFlag, bool bareFormat)
+    {
+        string outFilename = inFilename.Replace(".epub", "").Replace("_nodrm", "") + ".txt";
+        string inFileFullPath = Path.Combine(fromFolder, inFilename);
+        string outFileFullPath = Path.Combine(toFolder, outFilename);
+
+        if (File.Exists(outFileFullPath) && quickFlag)
+        {
+            // check if outfile is newer than infile
+            FileInfo inFI = new(inFileFullPath);
+            FileInfo outFI = new(outFileFullPath);
+            if (inFI.LastWriteTimeUtc < outFI.LastWriteTimeUtc)
+            {
+                return false;
             }
         }
 
-        private static bool DoConversion(string fromFolder, string toFolder, string inFilename, bool forceFlag, bool quickFlag, bool bareFormat)
+        EbookLoader ebook;
+        try
         {
-            string outFilename = inFilename.Replace(".epub", "").Replace("_nodrm", "") + ".txt";
-            string inFileFullPath = Path.Combine(fromFolder, inFilename);
-            string outFileFullPath = Path.Combine(toFolder, outFilename);
+            ebook = new EbookLoader(inFileFullPath);
+        }
+        catch (Exception)
+        {
+            // cannot load ebook
+            Console.WriteLine($"\rError: {inFilename}");
+            return false;
+        }
 
-            if (File.Exists(outFileFullPath) && quickFlag)
-            {
-                // check if outfile is newer than infile
-                FileInfo inFI = new FileInfo(inFileFullPath);
-                FileInfo outFI = new FileInfo(outFileFullPath);
-                if (inFI.LastWriteTimeUtc < outFI.LastWriteTimeUtc)
-                {
-                    return false;
-                }
-            }
-
-            EbookLoader ebook;
-            try
-            {
-                ebook = new EbookLoader(inFileFullPath);
-            }
-            catch (Exception)
-            {
-                // cannot load ebook
-                Console.WriteLine($"\rError: {inFilename}");
-                return false;
-            }
-
-            StringBuilder s = new StringBuilder();
-            bool firstChapter = true;
+        StringBuilder s = new();
+        bool firstChapter = true;
+        if (ebook != null && ebook.Chapters != null)
+        {
             foreach (Chapter c in ebook.Chapters)
             {
                 if (!firstChapter)
@@ -192,22 +191,22 @@ namespace SimpleEpubToText
                     s.AppendLine(p);
                 }
             }
-            string outFileText = EbookReformat.ReformatEbook(s.ToString(), bareFormat);
-            if (string.IsNullOrEmpty(outFileText))
+        }
+        string outFileText = EbookReformat.ReformatEbook(s.ToString(), bareFormat);
+        if (string.IsNullOrEmpty(outFileText))
+        {
+            // books with only pictures (Calvin and Hobbes)
+            return false;
+        }
+        if (File.Exists(outFileFullPath) && !forceFlag)
+        {
+            string oldFileText = File.ReadAllText(outFileFullPath);
+            if (oldFileText == outFileText)
             {
-                // books with only pictures (Calvin and Hobbes)
                 return false;
             }
-            if (File.Exists(outFileFullPath) && !forceFlag)
-            {
-                string oldFileText = File.ReadAllText(outFileFullPath);
-                if (oldFileText == outFileText)
-                {
-                    return false;
-                }
-            }
-            File.WriteAllText(outFileFullPath, outFileText);
-            return true;
         }
+        File.WriteAllText(outFileFullPath, outFileText);
+        return true;
     }
 }
