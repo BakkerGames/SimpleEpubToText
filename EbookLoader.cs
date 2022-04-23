@@ -293,17 +293,17 @@ namespace SimpleEpubToText
                             }
                             break;
                         case "span":
-                            if (s2.Contains("\"bold\""))
+                            if (s2.Contains("bold"))
                             {
                                 spanStack.Push("b");
                                 currline.Append("_b1_");
                             }
-                            else if (s2.Contains("\"italic\""))
+                            else if (s2.Contains("italic"))
                             {
                                 spanStack.Push("i");
                                 currline.Append("_i1_");
                             }
-                            else if (s2.Contains("\"underline\""))
+                            else if (s2.Contains("underline"))
                             {
                                 spanStack.Push("u");
                                 currline.Append("_u1_");
