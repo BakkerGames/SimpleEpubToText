@@ -3,13 +3,13 @@
     "SimpleEpubToText": {
       "commandName": "Project"
     },
-    "CalibreLibrary": {
-      "commandName": "Project",
-      "commandLineArgs": "C:\\Books\\CalibreLibrary --bare"
-    },
     "Temp2": {
       "commandName": "Project",
       "commandLineArgs": "C:\\Books\\Temp2 --bare"
+    },
+    "EPUB": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Books\\EPUB C:\\Books\\EPUB_TXT --bare"
     }
   }
 }

@@ -67,13 +67,29 @@ public class EbookLoader
                 {
                     s2 = s2.Replace("&nbsp;", " ");
                 }
-                if (s2.Contains("&#160;"))
+                if (s2.Contains("&ensp;"))
+                {
+                    s2 = s2.Replace("&ensp;", " ");
+                }
+                if (s2.Contains("&emsp;"))
+                {
+                    s2 = s2.Replace("&emsp;", " ");
+                }
+                if (s2.Contains("&#160;")) // no-break space
                 {
                     s2 = s2.Replace("&#160;", " ");
                 }
-                if (s2.Contains($"{(char)160}"))
+                if (s2.Contains($"{(char)160}")) // no-break space
                 {
                     s2 = s2.Replace((char)160, ' ');
+                }
+                if (s2.Contains($"{(char)8194}")) // en-space
+                {
+                    s2 = s2.Replace((char)8194, ' ');
+                }
+                if (s2.Contains($"{(char)8195}")) // em-space
+                {
+                    s2 = s2.Replace((char)8195, ' ');
                 }
                 if (s2.Length == 0) continue;
                 if (s2.Contains('_'))
