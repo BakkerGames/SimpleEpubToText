@@ -334,13 +334,13 @@ public class EbookReformat
                 case 8205: // zero width joiner
                     charValue = 0;
                     break;
-                case 132:
-                case 147:
-                case 148:
-                case 171:
-                case 187:
-                case 8220:
-                case 8221:
+                case 132: // „
+                case 147: // “
+                case 148: // ”
+                // case 171: // « &laquo;
+                // case 187: // » &raquo;
+                case 8220: // &ldquo;
+                case 8221: // &rdquo;
                     charValue = 34;
                     break;
                 case 96:

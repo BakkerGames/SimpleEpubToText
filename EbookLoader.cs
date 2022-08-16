@@ -650,8 +650,8 @@ public class EbookLoader
                 case (char)132:
                 case (char)147:
                 case (char)148:
-                case (char)171:
-                case (char)187:
+                // case (char)171:
+                // case (char)187:
                 case (char)8220:
                 case (char)8221:
                     result.Append('"');
