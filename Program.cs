@@ -71,8 +71,6 @@ class Program
             {
                 Console.WriteLine($"Errors:        {errorCount}");
             }
-            Console.Write("\r\nPress any key to continue...");
-            Console.Read();
             return 0;
         }
         catch (Exception e)

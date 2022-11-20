@@ -413,7 +413,7 @@ public class EbookReformat
         int pos2 = s.IndexOf(">");
         while (pos1 >= 0 && pos2 > pos1)
         {
-            s = string.Concat(s.AsSpan(0, pos1), s[(pos2 + 1)..]);
+            s = string.Concat(s.AsSpan(0, pos1), s.AsSpan()[(pos2 + 1)..]);
             pos1 = s.IndexOf("<");
             pos2 = s.IndexOf(">");
         }
