@@ -8,6 +8,7 @@ public class EbookLoader
     private readonly string? _ebookPath;
     private EpubBook? book;
     private List<EpubTextContentFile>? contentFiles;
+    private readonly Dictionary<string, string> cssStyles = new();
 
     public List<Chapter>? Chapters;
 
@@ -26,6 +27,7 @@ public class EbookLoader
     private void EpubToChapters(string ebookPath)
     {
         book = EpubReader.ReadBook(ebookPath);
+        ExtractCSS(book);
         contentFiles = book.ReadingOrder.ToList();
         Chapters = new List<Chapter>();
         for (int i = 0; i < contentFiles.Count; i++)
@@ -305,25 +307,52 @@ public class EbookLoader
                         }
                         break;
                     case "span":
+                        if (s2.Contains("italic"))
+                        {
+                            spanStack.Push("i");
+                            currline.Append("_i1_");
+                            break;
+                        }
                         if (s2.Contains("bold"))
                         {
                             spanStack.Push("b");
                             currline.Append("_b1_");
+                            break;
                         }
-                        else if (s2.Contains("italic"))
-                        {
-                            spanStack.Push("i");
-                            currline.Append("_i1_");
-                        }
-                        else if (s2.Contains("underline"))
+                        if (s2.Contains("underline"))
                         {
                             spanStack.Push("u");
                             currline.Append("_u1_");
+                            break;
                         }
-                        else
+                        if (s2.Contains("class="))
                         {
-                            spanStack.Push("");
+                            string className = s2[(s2.IndexOf("class=") + 7)..];
+                            className = className[..className.IndexOf("\"")];
+                            if (cssStyles.ContainsKey(className))
+                            {
+                                string classValue = cssStyles[className];
+                                if (classValue.Contains("italic"))
+                                {
+                                    spanStack.Push("i");
+                                    currline.Append("_i1_");
+                                    break;
+                                }
+                                if (classValue.Contains("bold"))
+                                {
+                                    spanStack.Push("b");
+                                    currline.Append("_b1_");
+                                    break;
+                                }
+                                if (classValue.Contains("underline"))
+                                {
+                                    spanStack.Push("u");
+                                    currline.Append("_u1_");
+                                    break;
+                                }
+                            }
                         }
+                        spanStack.Push("");
                         break;
                     case "/span":
                         string spanPop = spanStack.Pop();
@@ -626,6 +655,28 @@ public class EbookLoader
                         }
                     }
                     Chapters.Add(chapter);
+                }
+            }
+        }
+    }
+
+    private void ExtractCSS(EpubBook book)
+    {
+        Dictionary<string, EpubTextContentFile> css = book.Content.Css;
+        cssStyles.Clear();
+        foreach (KeyValuePair<string, EpubTextContentFile> kv in css)
+        {
+            string[] styles = kv.Value.Content.Replace("\r", " ").Replace("\n", " ").Split('}');
+            foreach (string s in styles)
+            {
+                if (!string.IsNullOrEmpty(s?.Trim()))
+                {
+                    string name = s[..s.IndexOf('{')].Replace(".", "").Trim();
+                    if (!cssStyles.ContainsKey(name))
+                    {
+                        string value = s[(s.IndexOf('{') + 1)..].Trim();
+                        cssStyles.Add(name, value);
+                    }
                 }
             }
         }

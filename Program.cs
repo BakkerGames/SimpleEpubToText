@@ -165,10 +165,10 @@ class Program
         {
             ebook = new EbookLoader(inFileFullPath);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             // cannot load ebook
-            Console.WriteLine($"\rError: {inFilename}");
+            Console.WriteLine($"\rError: {inFilename} - {ex.Message}");
             return false;
         }
 
