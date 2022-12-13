@@ -55,10 +55,10 @@ public class EbookReformat
             s = s[..pos0] + "[" + s.Substring(pos0 + 10, pos1 - pos0 - 10) + "]" + s[(pos1 + 1)..];
             s = s.Replace("[image]", ""); // don't need [image] now
         }
-        if (s.StartsWith("###") && s.Contains("[image]"))
-        {
-            //s = s.Replace("[image]", "").TrimEnd();
-        }
+        //if (s.StartsWith("###") && s.Contains("[image]"))
+        //{
+        //    s = s.Replace("[image]", "").TrimEnd();
+        //}
         StringBuilder result = new();
         bool inTag = false;
         bool inCode = false;
@@ -206,6 +206,10 @@ public class EbookReformat
         if (newResult.Contains(" </i> "))
         {
             newResult = newResult.Replace(" </i> ", "</i> ");
+        }
+        if (newResult.StartsWith("\t###"))
+        {
+            newResult = newResult[4..];
         }
         if (newResult == "\t")
         {

@@ -238,7 +238,7 @@ public class EbookLoader
                                 chapter.Paragraphs.Add("");
                                 secondLine = true;
                             }
-                            else if (s4.Length > 100) // too long for chapter
+                            else if (s4.Length > 100) // too long for chapter title
                             {
                                 chapter.Paragraphs.Add("###");
                                 chapter.Paragraphs.Add("");
@@ -270,8 +270,19 @@ public class EbookLoader
                         }
                         else if (!secondLine || currline.Length > 0)
                         {
-                            chapter.Paragraphs.Add("_p_" + currline.ToString().Trim());
-                            secondLine = false;
+                            if (!secondLine && (tag == "/h1" || tag == "/h2") && currline.ToString().IndexOf("image") < 0)
+                            {
+                                Chapters.Add(chapter);
+                                chapter = new();
+                                chapter.Paragraphs.Add("###" + currline.ToString().Trim());
+                                chapter.Paragraphs.Add("");
+                                secondLine = true;
+                            }
+                            else
+                            {
+                                chapter.Paragraphs.Add("_p_" + currline.ToString().Trim());
+                                secondLine = false;
+                            }
                         }
                         currline.Clear();
                         break;
