@@ -3,6 +3,10 @@
     "SimpleEpubToText": {
       "commandName": "Project"
     },
+    "Temp": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Books\\Temp --bare"
+    },
     "Temp2": {
       "commandName": "Project",
       "commandLineArgs": "C:\\Books\\Temp2 --bare"

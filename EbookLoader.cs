@@ -666,16 +666,46 @@ public class EbookLoader
         cssStyles.Clear();
         foreach (KeyValuePair<string, EpubTextContentFile> kv in css)
         {
-            string[] styles = kv.Value.Content.Replace("\r", " ").Replace("\n", " ").Split('}');
+            string fixedContent = kv.Value.Content;
+            while (fixedContent.Contains("/*"))
+            {
+                int pos1 = fixedContent.IndexOf("/*");
+                int pos2 = fixedContent.IndexOf("*/", pos1);
+                if (pos2 > pos1)
+                {
+                    fixedContent = fixedContent[0..pos1] + fixedContent[(pos2 + 2)..];
+                }
+                else
+                {
+                    throw new SystemException("Invalid css");
+                }
+            }
+            if (fixedContent.StartsWith("@charset") && fixedContent.Contains(';'))
+            {
+                fixedContent = fixedContent[(fixedContent.IndexOf(';') + 1)..];
+            }
+            string[] styles = fixedContent.Replace("\r", " ").Replace("\n", " ").Split('}');
             foreach (string s in styles)
             {
                 if (!string.IsNullOrEmpty(s?.Trim()))
                 {
                     string name = s[..s.IndexOf('{')].Replace(".", "").Trim();
-                    if (!cssStyles.ContainsKey(name))
+                    if (!cssStyles.ContainsKey(name) && s.Contains('{'))
                     {
                         string value = s[(s.IndexOf('{') + 1)..].Trim();
-                        cssStyles.Add(name, value);
+                        string[] names = name.Split(',');
+                        foreach (string n in names)
+                        {
+                            string nTrim = n.Trim();
+                            if (cssStyles.ContainsKey(nTrim))
+                            {
+                                cssStyles[nTrim] = cssStyles[nTrim] + ';' + value;
+                            }
+                            else
+                            {
+                                cssStyles.Add(nTrim, value);
+                            }
+                        }
                     }
                 }
             }
