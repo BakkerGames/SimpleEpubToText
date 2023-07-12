@@ -4,7 +4,7 @@
     <DebuggerFlavor>ProjectDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup>
-    <ActiveDebugProfile>Temp</ActiveDebugProfile>
-    <_LastSelectedProfileId>C:\Projects\SimpleEpubToText\Properties\PublishProfiles\FolderProfile.pubxml</_LastSelectedProfileId>
+    <ActiveDebugProfile>SimpleEpubToText</ActiveDebugProfile>
+    <_LastSelectedProfileId>C:\Users\Scott\source\repos\SimpleEpubToText\Properties\PublishProfiles\FolderProfile.pubxml</_LastSelectedProfileId>
   </PropertyGroup>
 </Project>
