@@ -5,7 +5,7 @@
     },
     "Temp": {
       "commandName": "Project",
-      "commandLineArgs": "C:\\Books\\Temp --bare"
+      "commandLineArgs": "C:\\Temp --bare"
     },
     "Temp2": {
       "commandName": "Project",
